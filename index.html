@@ -2712,22 +2712,26 @@
                 }
               }
               closeAuthModal();
+            } else {
+              openAuthModal();
             }
           });
         } catch (e) {
           console.log('Local cloud config error:', e);
+          openAuthModal();
         }
       } else {
         const statusTextEl = document.getElementById('cloud-status-text');
         if (statusTextEl) {
           statusTextEl.innerText = 'สถานะคลาวด์: เชื่อมต่อ Google Cloud (agridash-durian) สำเร็จ!';
         }
+        openAuthModal();
       }
     });
   </script>
 
   <!-- 🔑 USER AUTHENTICATION / LOGIN MODAL -->
-  <div id="auth-modal" class="modal-overlay hidden" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;">
+  <div id="auth-modal" class="modal-overlay" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,23,42,0.85); backdrop-filter:blur(8px); z-index:200; display:flex; align-items:center; justify-content:center; padding:20px;">
     <div class="card" style="max-width:440px; width:100%; padding:36px 28px; border-radius:20px; text-align:center; box-shadow:var(--shadow-lg);">
       <div style="width:64px; height:64px; border-radius:18px; background:var(--emerald-500); color:white; display:flex; align-items:center; justify-content:center; margin:0 auto 16px auto; font-size:2rem; box-shadow:0 8px 20px rgba(16,185,129,0.3);">
         🌳
