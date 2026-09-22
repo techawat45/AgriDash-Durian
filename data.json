@@ -1,0 +1,24 @@
+{
+  "fieldLogs": [
+    {
+      "id": "test-1",
+      "cost": 100,
+      "activity": "?????",
+      "plot": "?????????",
+      "date": "2026-09-08",
+      "detail": "???????????",
+      "userEmail": "guest"
+    },
+    {
+      "id": "field-1790099146467",
+      "date": "2026-08-15",
+      "plot": "1) สวนหมอนทอง (บ้าน)",
+      "activity": "🌸 ราดสาร / ทำสารแพคโคล",
+      "detail": "พันธุ์: หมอนทอง | สาร 45วัน ➔ ดอก: 29 ก.ย. 2569 | เก็บ: 28 มี.ค. 2570",
+      "cost": 5170,
+      "userEmail": "techawat45@gmail.com"
+    }
+  ],
+  "plantSurveys": [],
+  "accEntries": []
+}
