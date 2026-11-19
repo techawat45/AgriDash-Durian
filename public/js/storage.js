@@ -27,9 +27,15 @@ const AGRI_STORAGE = (() => {
   const SESSION_KEY_GUEST = 'session_guest';
   const SESSION_KEY_DATA  = 'session_data';
   const API_BASE_KEY      = 'custom_backend_url';
+  const DEFAULT_CLOUD_API_URL = 'https://agridash-durian-api.onrender.com';
 
   function getApiBaseUrl() {
-    return (ls.get(API_BASE_KEY) || '').trim().replace(/\/+$/, '');
+    const custom = (ls.get(API_BASE_KEY) || '').trim().replace(/\/+$/, '');
+    if (custom) return custom;
+    if (typeof window !== 'undefined' && window.location && window.location.hostname.includes('github.io')) {
+      return DEFAULT_CLOUD_API_URL;
+    }
+    return '';
   }
   function setApiBaseUrl(url) {
     if (!url) ls.remove(API_BASE_KEY);
@@ -40,6 +46,9 @@ const AGRI_STORAGE = (() => {
     if (!base) return endpoint;
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : ('/' + endpoint);
     return base + cleanEndpoint;
+  }
+  function getTimeoutMs(localMs = 4000, cloudMs = 25000) {
+    return getApiBaseUrl() ? cloudMs : localMs;
   }
 
   function saveSession(email, isGuest) {
@@ -160,7 +169,7 @@ const AGRI_STORAGE = (() => {
   let _backendOnline = null;
   async function checkHealth() {
     try {
-      const r = await fetch(apiUrl('/api/health'), { signal: AbortSignal.timeout(3000) });
+      const r = await fetch(apiUrl('/api/health'), { signal: AbortSignal.timeout(getTimeoutMs(3000, 20000)) });
       const json = await parseResponseSafely(r);
       _backendOnline = json && json.success === true;
       return json || { success: false, status: 'offline' };
@@ -179,7 +188,7 @@ const AGRI_STORAGE = (() => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cleanEmail, password }),
-        signal: AbortSignal.timeout(4000)
+        signal: AbortSignal.timeout(getTimeoutMs(5000, 25000))
       });
       const json = await parseResponseSafely(r);
       if (!json.success) throw new Error(json.message || 'เข้าสู่ระบบไม่สำเร็จ');
@@ -187,12 +196,15 @@ const AGRI_STORAGE = (() => {
       saveRegisteredUser({ email: cleanEmail, password, firstName: json.firstName, farmName: json.farmName });
       return json;
     } catch(e) {
-      // หากเซิร์ฟเวอร์ส่งข้อความปฏิเสธรหัสผ่าน ให้แสดงข้อความนั้น
+      // หากเซิร์ฟเวอร์จริงตอบปฏิเสธ (เช่น 400 รหัสผ่านผิด/ไม่พบบัญชี) ให้แสดงข้อความจริง
+      if (e.status && e.status >= 400 && e.status < 500 && e.status !== 404 && !e.isHtml) {
+        throw e;
+      }
       if (e.message && (e.message.includes('รหัสผ่านไม่ถูกต้อง') || e.message.includes('ไม่พบอีเมลนี้ในระบบ'))) {
         throw e;
       }
 
-      console.warn('[Storage] Backend auth unavailable or on static hosting, using local store:', e.message);
+      console.warn('[Storage] Backend auth unavailable, using local store:', e.message);
 
       // โหมดออฟไลน์ / โฮสต์แบบสแตติก (GitHub Pages)
       const localUsers = getRegisteredUsers();
@@ -238,7 +250,7 @@ const AGRI_STORAGE = (() => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, email: cleanEmail }),
-        signal: AbortSignal.timeout(4000)
+        signal: AbortSignal.timeout(getTimeoutMs(5000, 25000))
       });
       const json = await parseResponseSafely(r);
       if (!json.success) throw new Error(json.message || 'สมัครสมาชิกไม่สำเร็จ');
@@ -246,10 +258,13 @@ const AGRI_STORAGE = (() => {
       saveRegisteredUser({ ...payload, email: cleanEmail });
       return json;
     } catch(e) {
+      if (e.status && e.status >= 400 && e.status < 500 && e.status !== 404 && !e.isHtml) {
+        throw e;
+      }
       if (e.message && e.message.includes('อีเมลนี้ถูกสมัครใช้งานแล้ว')) {
         throw e;
       }
-      console.warn('[Storage] Backend register unavailable or on static host, saving locally:', e.message);
+      console.warn('[Storage] Backend register unavailable, saving locally:', e.message);
       saveRegisteredUser({ ...payload, email: cleanEmail });
       addRecentAccount(cleanEmail, payload.firstName, payload.farmName);
       return {
@@ -264,7 +279,7 @@ const AGRI_STORAGE = (() => {
     const cleanEmail = (email || 'guest').toLowerCase().trim();
     try {
       const r = await fetch(apiUrl('/api/data?userEmail=' + encodeURIComponent(cleanEmail)), {
-        signal: AbortSignal.timeout(4000)
+        signal: AbortSignal.timeout(getTimeoutMs(5000, 25000))
       });
       const json = await parseResponseSafely(r);
       if (json && json.success && json.data) {
@@ -296,7 +311,7 @@ const AGRI_STORAGE = (() => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userEmail: cleanEmail, fieldLogs, plantSurveys, accEntries }),
-        signal: AbortSignal.timeout(4000)
+        signal: AbortSignal.timeout(getTimeoutMs(5000, 25000))
       });
       const json = await parseResponseSafely(r);
       return { success: true, synced: true, message: json.message };

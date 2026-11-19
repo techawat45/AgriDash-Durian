@@ -418,6 +418,7 @@ async function handleEmailAuthSubmit(event) {
       updateAvatarUI(r.email, r.firstName, r.farmName);
       showToast('ยินดีต้อนรับ ' + (r.firstName || r.email) + ' เข้าสู่ระบบเรียบร้อย', 'success');
       await loadUserData();
+      AGRI_STORAGE.checkHealth().then(updateConnectionUI);
     }
   } catch (err) {
     showToast(err.message, 'error');
@@ -1857,11 +1858,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   calculateSprayWater();
   calculateFlowerDates();
 
-  const health = await AGRI_STORAGE.checkHealth();
-  updateConnectionUI(health);
-  refreshSheetsStatus();
-  hidePageLoader();
-
   const session = AGRI_STORAGE.getSession();
   if (session.email && !session.isGuest && session.email !== 'guest') {
     currentLoggedInEmail = session.email;
@@ -1877,7 +1873,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateAvatarUI('guest');
   }
 
+  hidePageLoader();
+
+  // เช็คการเชื่อมต่อ Cloud Backend และโหลดข้อมูลแบบ Non-blocking
+  const healthPromise = AGRI_STORAGE.checkHealth().then(health => {
+    updateConnectionUI(health);
+    refreshSheetsStatus();
+    return health;
+  });
+
   await loadUserData();
+  await healthPromise;
+
   setInterval(async () => {
     updateConnectionUI(await AGRI_STORAGE.checkHealth());
   }, 30000);
