@@ -17,7 +17,11 @@ const mongoose = require("mongoose");
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, "data.json");
+const SHEETS_CONFIG_FILE = path.join(__dirname, "sheets-config.json");
+const SHEETS_BACKUP_FILE = path.join(__dirname, "sheets-backup.json");
 const MONGODB_URI = process.env.MONGODB_URI || "";
+const DEFAULT_SHEET_ID = process.env.GOOGLE_SHEET_ID || "1Z5VJksCIxIYji6FrmG2faT4M27yXbnlg-rbP3e9koOY";
+const DEFAULT_SHEET_URL = process.env.GOOGLE_SHEET_URL || `https://docs.google.com/spreadsheets/d/${DEFAULT_SHEET_ID}/edit`;
 
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
@@ -57,6 +61,7 @@ const AccEntrySchema = new mongoose.Schema({
   userEmail: { type: String, index: true, default: "guest" },
   date: String,
   type: { type: String, enum: ["income", "expense"] },
+  plot: { type: String, default: "รวมทุกแปลง" },
   category: String, detail: String,
   amount: { type: Number, default: 0 }
 }, { timestamps: true });
@@ -110,8 +115,142 @@ const writeLocalData = (data) => {
   catch (e) { console.error("Error writing local data.json:", e); return false; }
 };
 
+function readSheetsConfig() {
+  let fileCfg = {};
+  try {
+    if (fs.existsSync(SHEETS_CONFIG_FILE)) {
+      fileCfg = JSON.parse(fs.readFileSync(SHEETS_CONFIG_FILE, "utf-8"));
+    }
+  } catch (e) {}
+  return {
+    spreadsheetId: fileCfg.spreadsheetId || DEFAULT_SHEET_ID,
+    spreadsheetUrl: fileCfg.spreadsheetUrl || DEFAULT_SHEET_URL,
+    webhookUrl: (fileCfg.webhookUrl || process.env.GOOGLE_SHEETS_WEBHOOK_URL || "").trim()
+  };
+}
+
+function writeSheetsConfig(cfg) {
+  try {
+    fs.writeFileSync(SHEETS_CONFIG_FILE, JSON.stringify(cfg, null, 2), "utf-8");
+    return true;
+  } catch (e) {
+    console.error("Error writing sheets-config.json:", e);
+    return false;
+  }
+}
+
+function readSheetsBackupLog() {
+  try {
+    if (fs.existsSync(SHEETS_BACKUP_FILE)) {
+      const parsed = JSON.parse(fs.readFileSync(SHEETS_BACKUP_FILE, "utf-8"));
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch (e) {}
+  return [];
+}
+
+function appendSheetsBackupLog(records) {
+  try {
+    const existing = readSheetsBackupLog();
+    const map = new Map(existing.map(r => [r.id + "::" + r.sheetName, r]));
+    records.forEach(r => map.set(r.id + "::" + r.sheetName, r));
+    fs.writeFileSync(SHEETS_BACKUP_FILE, JSON.stringify([...map.values()], null, 2), "utf-8");
+  } catch (e) {
+    console.error("Error writing sheets-backup.json:", e);
+  }
+}
+
+function formatDateSlashThai(isoStr) {
+  if (!isoStr) return "-";
+  const parts = String(isoStr).split("-");
+  if (parts.length === 3) {
+    const y = parseInt(parts[0], 10);
+    const by = y < 2400 ? y + 543 : y;
+    return `${parts[2]}/${parts[1]}/${by}`;
+  }
+  return String(isoStr);
+}
+
+function buildAccSheetRow(entry, userEmail) {
+  const nowThai = new Date().toLocaleString("th-TH", { timeZone: "Asia/Bangkok" });
+  return [
+    entry.id || ("acc-" + Date.now()),
+    formatDateSlashThai(entry.date),
+    entry.type === "income" ? "รายรับ" : "รายจ่าย",
+    entry.plot || "รวมทุกแปลง",
+    entry.category || "-",
+    entry.detail || "-",
+    Number(entry.amount || 0),
+    userEmail || "guest",
+    nowThai
+  ];
+}
+
+function buildFieldSheetRow(log) {
+  const nowThai = new Date().toLocaleString("th-TH", { timeZone: "Asia/Bangkok" });
+  return [
+    log.id || ("field-" + Date.now()),
+    formatDateSlashThai(log.date),
+    log.plot || "ทุกแปลง",
+    log.activity || "-",
+    log.detail || "-",
+    Number(log.cost || 0),
+    nowThai
+  ];
+}
+
+async function postToGoogleSheetWebhook(sheetName, rows, itemIds = []) {
+  const cfg = readSheetsConfig();
+  const timestamp = new Date().toISOString();
+  if (!cfg.webhookUrl) {
+    appendSheetsBackupLog(rows.map((row, idx) => ({
+      id: itemIds[idx] || row[0],
+      sheetName,
+      row,
+      synced: false,
+      updatedAt: timestamp
+    })));
+    return { synced: false, queued: true, reason: "no_webhook_configured" };
+  }
+
+  try {
+    const resp = await fetch(cfg.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ spreadsheetId: cfg.spreadsheetId, sheetName, rows }),
+      redirect: "follow",
+      signal: AbortSignal.timeout(10000)
+    });
+    const text = await resp.text();
+    let parsed = null;
+    try { parsed = JSON.parse(text); } catch (e) {}
+    const ok = resp.ok && (!parsed || parsed.success !== false);
+    appendSheetsBackupLog(rows.map((row, idx) => ({
+      id: itemIds[idx] || row[0],
+      sheetName,
+      row,
+      synced: ok,
+      updatedAt: timestamp
+    })));
+    return { synced: ok, queued: !ok, responseText: text.slice(0, 200) };
+  } catch (err) {
+    console.warn("⚠️ Google Sheet Webhook sync failed (queued locally):", err.message);
+    appendSheetsBackupLog(rows.map((row, idx) => ({
+      id: itemIds[idx] || row[0],
+      sheetName,
+      row,
+      synced: false,
+      error: err.message,
+      updatedAt: timestamp
+    })));
+    return { synced: false, queued: true, error: err.message };
+  }
+}
+
 function validateUserEmail(req, res, next) {
-  const email = (req.body.userEmail || req.query.userEmail || "guest").toLowerCase().trim();
+  const bodyEmail = req.body && req.body.userEmail;
+  const queryEmail = req.query && req.query.userEmail;
+  const email = (bodyEmail || queryEmail || "guest").toLowerCase().trim();
   if (email !== "guest" && !email.includes("@")) {
     return res.status(400).json({ success: false, message: "userEmail invalid" });
   }
@@ -119,8 +258,18 @@ function validateUserEmail(req, res, next) {
 }
 
 app.get("/api/health", (req, res) => {
-  res.json({ success: true, status: "online", mongoConnected: isMongoConnected,
-    mode: isMongoConnected ? "mongodb_atlas" : "local_json", timestamp: new Date().toISOString() });
+  const cfg = readSheetsConfig();
+  const pendingCount = readSheetsBackupLog().filter(r => !r.synced).length;
+  res.json({
+    success: true,
+    status: "online",
+    mongoConnected: isMongoConnected,
+    mode: isMongoConnected ? "mongodb_atlas" : "local_json",
+    googleSheetConfigured: Boolean(cfg.webhookUrl),
+    googleSheetUrl: cfg.spreadsheetUrl,
+    pendingSheetSync: pendingCount,
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.post("/api/auth/register", async (req, res) => {
@@ -236,6 +385,204 @@ app.delete("/api/data/:collection/:id", async (req, res) => {
     } catch (e) { console.error("Delete error:", e.message); }
   }
   res.json({ success: true, deleted: allLocal[collection].length < before });
+});
+
+// 1-Click endpoint: บันทึกค่าใช้จ่ายจากหน้าคำนวณปุ๋ย & สารเคมี ลง MongoDB Atlas (สมุดบัญชี + งานแปลง) และ Google Sheet สำรอง
+app.post("/api/ledger/calc-expense", validateUserEmail, async (req, res) => {
+  const userEmail = (req.body.userEmail || "guest").toLowerCase().trim();
+  const { accEntry, fieldLog } = req.body || {};
+
+  if (!accEntry || !accEntry.id || Number(accEntry.amount || 0) <= 0) {
+    return res.status(400).json({ success: false, message: "ข้อมูลค่าใช้จ่ายไม่ถูกต้อง" });
+  }
+
+  // 1. บันทึกลง local data.json เสมอเพื่อสำรองข้อมูลทันที
+  initializeLocalData();
+  const allLocal = readLocalData();
+  allLocal.accEntries = [
+    { ...accEntry, userEmail },
+    ...allLocal.accEntries.filter(i => i.id !== accEntry.id)
+  ];
+  if (fieldLog && fieldLog.id) {
+    allLocal.fieldLogs = [
+      { ...fieldLog, userEmail },
+      ...allLocal.fieldLogs.filter(i => i.id !== fieldLog.id)
+    ];
+  }
+  const localSaved = writeLocalData(allLocal);
+
+  // 2. บันทึกลง MongoDB Atlas (ไม่ล้มเหลวหากฐานข้อมูลออฟไลน์ชั่วคราว)
+  let mongoSaved = false;
+  let mongoError = null;
+  if (isMongoConnected) {
+    try {
+      await AccEntryModel.findOneAndUpdate(
+        { id: accEntry.id, userEmail },
+        { ...accEntry, userEmail },
+        { upsert: true, new: true }
+      );
+      if (fieldLog && fieldLog.id) {
+        await FieldLogModel.findOneAndUpdate(
+          { id: fieldLog.id, userEmail },
+          { ...fieldLog, userEmail },
+          { upsert: true, new: true }
+        );
+      }
+      mongoSaved = true;
+    } catch (e) {
+      mongoError = e.message;
+      console.error("MongoDB calc-expense save error:", e.message);
+    }
+  }
+
+  // 3. ส่งสำรองเข้า Google Sheet
+  const accSheetRes = await postToGoogleSheetWebhook(
+    "สมุดบัญชี",
+    [buildAccSheetRow(accEntry, userEmail)],
+    [accEntry.id]
+  );
+  let fieldSheetRes = null;
+  if (fieldLog && fieldLog.id) {
+    fieldSheetRes = await postToGoogleSheetWebhook(
+      "งานแปลงและคำนวณปุ๋ย",
+      [buildFieldSheetRow(fieldLog)],
+      [fieldLog.id]
+    );
+  }
+
+  const cfg = readSheetsConfig();
+  res.json({
+    success: true,
+    mongoSaved,
+    mongoError,
+    localSaved,
+    sheetSynced: accSheetRes.synced,
+    sheetQueued: accSheetRes.queued,
+    fieldSheetSynced: fieldSheetRes ? fieldSheetRes.synced : null,
+    spreadsheetUrl: cfg.spreadsheetUrl,
+    message: mongoSaved
+      ? (accSheetRes.synced ? "บันทึกเข้า MongoDB Atlas และ Google Sheet สำเร็จ!" : "บันทึกเข้า MongoDB Atlas สำเร็จ (สำรองเข้าคิว Google Sheet แล้ว)")
+      : (accSheetRes.synced ? "ฐานข้อมูลออฟไลน์ — บันทึกสำรองลง Google Sheet และเครื่องสำเร็จ!" : "บันทึกสำรองลงเครื่องเรียบร้อย")
+  });
+});
+
+// อ่าน/บันทึกการตั้งค่า Google Sheet Webhook
+app.get("/api/sheets/config", (req, res) => {
+  const cfg = readSheetsConfig();
+  const backupLog = readSheetsBackupLog();
+  res.json({
+    success: true,
+    spreadsheetId: cfg.spreadsheetId,
+    spreadsheetUrl: cfg.spreadsheetUrl,
+    configured: Boolean(cfg.webhookUrl),
+    webhookUrl: cfg.webhookUrl,
+    pendingCount: backupLog.filter(r => !r.synced).length,
+    syncedCount: backupLog.filter(r => r.synced).length
+  });
+});
+
+app.post("/api/sheets/config", async (req, res) => {
+  const { webhookUrl, spreadsheetId } = req.body || {};
+  const current = readSheetsConfig();
+  const nextCfg = {
+    spreadsheetId: (spreadsheetId || current.spreadsheetId || DEFAULT_SHEET_ID).trim(),
+    spreadsheetUrl: spreadsheetId ? `https://docs.google.com/spreadsheets/d/${spreadsheetId.trim()}/edit` : current.spreadsheetUrl,
+    webhookUrl: typeof webhookUrl === "string" ? webhookUrl.trim() : current.webhookUrl
+  };
+  writeSheetsConfig(nextCfg);
+
+  // อัปเดต .env ด้วยเพื่อให้คงอยู่หลังรีสตาร์ท
+  try {
+    const envPath = path.join(__dirname, ".env");
+    if (fs.existsSync(envPath)) {
+      let envText = fs.readFileSync(envPath, "utf-8");
+      if (/^GOOGLE_SHEETS_WEBHOOK_URL=.*$/m.test(envText)) {
+        envText = envText.replace(/^GOOGLE_SHEETS_WEBHOOK_URL=.*$/m, `GOOGLE_SHEETS_WEBHOOK_URL=${nextCfg.webhookUrl}`);
+      } else {
+        envText += `\nGOOGLE_SHEETS_WEBHOOK_URL=${nextCfg.webhookUrl}`;
+      }
+      fs.writeFileSync(envPath, envText, "utf-8");
+    }
+  } catch (e) {
+    console.warn("Could not update .env webhook:", e.message);
+  }
+
+  res.json({
+    success: true,
+    configured: Boolean(nextCfg.webhookUrl),
+    spreadsheetUrl: nextCfg.spreadsheetUrl,
+    message: nextCfg.webhookUrl ? "บันทึกลิงก์เชื่อมต่อ Google Sheet เรียบร้อย" : "ล้างการตั้งค่า Webhook แล้ว"
+  });
+});
+
+// ส่งรายการเดี่ยวหรือหลายรายการเข้า Google Sheet
+app.post("/api/sheets/sync", validateUserEmail, async (req, res) => {
+  const userEmail = (req.body.userEmail || "guest").toLowerCase().trim();
+  const { accEntry, fieldLog } = req.body || {};
+  const results = {};
+  if (accEntry) {
+    results.acc = await postToGoogleSheetWebhook("สมุดบัญชี", [buildAccSheetRow(accEntry, userEmail)], [accEntry.id]);
+  }
+  if (fieldLog) {
+    results.field = await postToGoogleSheetWebhook("งานแปลงและคำนวณปุ๋ย", [buildFieldSheetRow(fieldLog)], [fieldLog.id]);
+  }
+  const cfg = readSheetsConfig();
+  res.json({
+    success: true,
+    configured: Boolean(cfg.webhookUrl),
+    spreadsheetUrl: cfg.spreadsheetUrl,
+    results
+  });
+});
+
+// ซิงค์ข้อมูลทั้งหมด (MongoDB / Local + คิวค้างส่ง) ขึ้น Google Sheet
+app.post("/api/sheets/flush", validateUserEmail, async (req, res) => {
+  const userEmail = (req.body.userEmail || "guest").toLowerCase().trim();
+  const cfg = readSheetsConfig();
+  if (!cfg.webhookUrl) {
+    return res.status(400).json({ success: false, message: "ยังไม่ได้ใส่ลิงก์ Google Apps Script Web App" });
+  }
+
+  let accEntries = [];
+  let fieldLogs = [];
+  if (isMongoConnected) {
+    try {
+      accEntries = await AccEntryModel.find({ userEmail }).lean();
+      fieldLogs = await FieldLogModel.find({ userEmail }).lean();
+    } catch (e) {}
+  }
+  if (!accEntries.length && !fieldLogs.length) {
+    const local = readLocalData();
+    accEntries = local.accEntries.filter(i => (i.userEmail || "guest").toLowerCase() === userEmail);
+    fieldLogs = local.fieldLogs.filter(i => (i.userEmail || "guest").toLowerCase() === userEmail);
+  }
+
+  let accRes = { synced: true };
+  let fieldRes = { synced: true };
+  if (accEntries.length > 0) {
+    accRes = await postToGoogleSheetWebhook(
+      "สมุดบัญชี",
+      accEntries.map(e => buildAccSheetRow(e, userEmail)),
+      accEntries.map(e => e.id)
+    );
+  }
+  if (fieldLogs.length > 0) {
+    fieldRes = await postToGoogleSheetWebhook(
+      "งานแปลงและคำนวณปุ๋ย",
+      fieldLogs.map(l => buildFieldSheetRow(l)),
+      fieldLogs.map(l => l.id)
+    );
+  }
+
+  res.json({
+    success: accRes.synced && fieldRes.synced,
+    accCount: accEntries.length,
+    fieldCount: fieldLogs.length,
+    spreadsheetUrl: cfg.spreadsheetUrl,
+    message: (accRes.synced && fieldRes.synced)
+      ? `ซิงค์ข้อมูลบัญชี ${accEntries.length} รายการ และงานแปลง ${fieldLogs.length} รายการ ขึ้น Google Sheet สำเร็จ!`
+      : "เชื่อมต่อ Webhook ไม่สำเร็จ กรุณาตรวจสอบลิงก์และสิทธิ์การเข้าถึง (Anyone)"
+  });
 });
 
 app.listen(PORT, () => {

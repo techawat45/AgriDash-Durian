@@ -1,0 +1,21 @@
+# Dependency directories
+node_modules/
+
+# Environment and sensitive credentials
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Local runtime data and fallbacks
+data.json
+sheets-backup.json
+sheets-config.json
+
+# Backups and temporary files
+*.bak
+*.tmp
+*.log
+.DS_Store
+Thumbs.db

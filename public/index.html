@@ -3,856 +3,112 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#10b981">
+  <meta name="theme-color" content="#059669">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>AgriDash - Modern Durian Agronomy & SaaS</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>AgriDash Durian Pro - ระบบบริหารจัดการสวนทุเรียนอัจฉริยะ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
-  <style>
-    :root {
-      --slate-50: #f8fafc;
-      --slate-100: #f1f5f9;
-      --slate-200: #e2e8f0;
-      --slate-300: #cbd5e1;
-      --slate-400: #94a3b8;
-      --slate-500: #64748b;
-      --slate-600: #475569;
-      --slate-700: #334155;
-      --slate-800: #1e293b;
-      --slate-900: #0f172a;
-      
-      --emerald-50: #ecfdf5;
-      --emerald-100: #d1fae5;
-      --emerald-500: #10b981;
-      --emerald-600: #059669;
-      --emerald-700: #047857;
-      
-      --rose-50: #fff1f2;
-      --rose-100: #ffe4e6;
-      --rose-500: #f43f5e;
-      --rose-600: #e11d48;
-      --rose-700: #be123c;
-      
-      --amber-50: #fffbeb;
-      --amber-100: #fef3c7;
-      --amber-500: #f59e0b;
-      --amber-600: #d97706;
-      
-      --blue-50: #eff6ff;
-      --blue-100: #dbeafe;
-      --blue-500: #3b82f6;
-      --blue-600: #2563eb;
-      
-      --purple-50: #faf5ff;
-      --purple-100: #f3e8ff;
-      --purple-500: #8b5cf6;
-      
-      --radius: 12px;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    body {
-      background-color: var(--slate-50);
-      color: var(--slate-900);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Header */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 30;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--slate-200);
-      height: 64px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 1.35rem;
-      color: var(--slate-900);
-      letter-spacing: -0.5px;
-    }
-
-    .brand svg {
-      color: var(--emerald-500);
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .nav-btn {
-      background: none;
-      border: none;
-      font-size: 0.83rem;
-      font-weight: 600;
-      color: var(--slate-500);
-      cursor: pointer;
-      padding: 8px 10px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-    }
-
-    .nav-btn:hover, .nav-btn.active {
-      color: var(--emerald-600);
-      background: var(--slate-100);
-    }
-
-    .user-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: var(--slate-100);
-      border: 1px solid var(--slate-200);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
-      font-size: 0.85rem;
-      color: var(--slate-700);
-    }
-
-    /* Main Container */
-    main {
-      flex: 1;
-      max-width: 1280px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 32px 24px 80px 24px;
-    }
-
-    /* Page Titles */
-    .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-
-    .page-title h1 {
-      font-size: 1.85rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
-
-    .page-title p {
-      color: var(--slate-500);
-      font-size: 0.95rem;
-      margin-top: 4px;
-    }
-
-    /* Buttons */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      height: 48px;
-      padding: 0 20px;
-      border-radius: var(--radius);
-      font-size: 0.95rem;
-      font-weight: 600;
-      border: none;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .btn:active {
-      transform: scale(0.97);
-    }
-
-    .btn-primary {
-      background: var(--emerald-500);
-      color: white;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-    }
-
-    .btn-primary:hover {
-      background: var(--emerald-600);
-    }
-
-    .btn-destructive {
-      background: var(--rose-500);
-      color: white;
-      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
-    }
-
-    .btn-outline {
-      background: white;
-      border: 1px solid var(--slate-200);
-      color: var(--slate-800);
-    }
-
-    .btn-outline:hover {
-      background: var(--slate-100);
-    }
-
-    /* Grid Layouts */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-
-    .card {
-      background: white;
-      border: 1px solid var(--slate-200);
-      border-radius: var(--radius);
-      padding: 24px;
-      box-shadow: var(--shadow-sm);
-      transition: box-shadow 0.2s ease;
-    }
-
-    .card:hover {
-      box-shadow: var(--shadow-md);
-    }
-
-    .kpi-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .kpi-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--slate-500);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .kpi-value {
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--slate-900);
-      margin-top: 6px;
-    }
-
-    .kpi-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: var(--slate-100);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--slate-700);
-    }
-
-    .kpi-trend {
-      margin-top: 16px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .trend-up { color: var(--emerald-600); }
-    .trend-down { color: var(--rose-500); }
-    .trend-warn { color: var(--amber-600); }
-
-    /* Detailed 10-Stage Grid */
-    .stage-10-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .stage-card {
-      background: white;
-      border: 1px solid var(--slate-200);
-      padding: 12px 14px;
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .stage-card.highlight {
-      border-color: var(--emerald-500);
-      background: var(--emerald-50);
-    }
-
-    .stage-card.harvest-card {
-      border-color: var(--rose-400);
-      background: var(--rose-50);
-    }
-
-    .stage-num {
-      font-size: 0.7rem;
-      font-weight: 700;
-      color: var(--slate-400);
-      text-transform: uppercase;
-    }
-
-    .stage-name {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--slate-900);
-    }
-
-    .stage-date {
-      font-size: 0.9rem;
-      font-weight: 800;
-      color: var(--emerald-700);
-    }
-
-    .stage-desc {
-      font-size: 0.75rem;
-      color: var(--slate-500);
-    }
-
-    /* Weather Alarms */
-    .weather-alert-card {
-      padding: 16px 20px;
-      border-radius: var(--radius);
-      border: 1px solid;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-
-    .weather-alert-card.warning {
-      background: var(--amber-50);
-      border-color: var(--amber-100);
-      color: var(--amber-900);
-    }
-
-    .weather-alert-card.danger {
-      background: var(--rose-50);
-      border-color: var(--rose-100);
-      color: var(--rose-900);
-    }
-
-    /* Charts Section */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 2fr 1.2fr;
-      gap: 24px;
-      margin-bottom: 24px;
-    }
-
-    @media (max-width: 900px) {
-      .charts-grid { grid-template-columns: 1fr; }
-    }
-
-    .chart-card-header {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      color: var(--slate-900);
-    }
-
-    /* Interactive Slices / Pills */
-    .chart-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid var(--slate-200);
-      background: white;
-      transition: all 0.2s ease;
-    }
-
-    .chart-pill:hover, .chart-pill.active {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-      border-color: var(--slate-400);
-    }
-
-    /* SVG Charts */
-    .svg-chart-container {
-      width: 100%;
-      height: 250px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .pie-segment {
-      cursor: pointer;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-    }
-
-    .pie-segment:hover {
-      opacity: 0.85;
-      transform: scale(1.04);
-      transform-origin: center;
-    }
-
-    /* Table */
-    .table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.9rem;
-    }
-
-    th {
-      background: var(--slate-50);
-      color: var(--slate-500);
-      font-weight: 600;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--slate-200);
-    }
-
-    td {
-      padding: 16px;
-      border-bottom: 1px solid var(--slate-100);
-      color: var(--slate-700);
-    }
-
-    tr:hover td {
-      background: var(--slate-50);
-    }
-
-    .badge-op {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: var(--slate-100);
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--slate-700);
-    }
-
-    .badge-stage {
-      display: inline-flex;
-      padding: 4px 10px;
-      border-radius: 20px;
-      background: var(--emerald-50);
-      color: var(--emerald-700);
-      border: 1px solid var(--emerald-200);
-      font-size: 0.8rem;
-      font-weight: 700;
-    }
-
-    .badge-income {
-      display: inline-flex;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: var(--emerald-50);
-      color: var(--emerald-700);
-      font-weight: 700;
-      font-size: 0.8rem;
-    }
-
-    .badge-expense {
-      display: inline-flex;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: var(--rose-50);
-      color: var(--rose-700);
-      font-weight: 700;
-      font-size: 0.8rem;
-    }
-
-    /* Form Container */
-    .form-container {
-      max-width: 820px;
-      margin: 0 auto;
-    }
-
-    .phi-banner {
-      padding: 20px;
-      border-radius: var(--radius);
-      border: 1px solid;
-      display: flex;
-      gap: 16px;
-      margin-bottom: 24px;
-      transition: all 0.3s ease;
-    }
-
-    .phi-banner.active {
-      background: var(--rose-50);
-      border-color: var(--rose-100);
-      color: var(--rose-900);
-    }
-
-    .phi-banner.clear {
-      background: var(--emerald-50);
-      border-color: var(--emerald-100);
-      color: var(--emerald-900);
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--slate-700);
-      margin-bottom: 8px;
-    }
-
-    .form-control {
-      width: 100%;
-      height: 48px;
-      padding: 0 16px;
-      border-radius: var(--radius);
-      border: 1px solid var(--slate-200);
-      background: white;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    .form-control:focus {
-      border-color: var(--emerald-500);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-    }
-
-    .segmented-control {
-      display: flex;
-      background: var(--slate-100);
-      padding: 4px;
-      border-radius: var(--radius);
-      gap: 4px;
-    }
-
-    .segmented-btn {
-      flex: 1;
-      height: 40px;
-      border: none;
-      background: none;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.9rem;
-      color: var(--slate-500);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .segmented-btn.active {
-      background: white;
-      color: var(--slate-900);
-      box-shadow: var(--shadow-sm);
-    }
-
-    /* 200L Dynamic Spray Recipe Box */
-    .recipe-box {
-      background: var(--slate-50);
-      border: 1px solid var(--slate-200);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-top: 12px;
-    }
-
-    .custom-input-box {
-      margin-top: 8px;
-      animation: fadeIn 0.2s ease;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-5px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Mobile Nav */
-    .mobile-nav {
-      display: none;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 72px;
-      background: white;
-      border-top: 1px solid var(--slate-200);
-      justify-content: space-around;
-      align-items: center;
-      z-index: 40;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-    }
-
-    @media (max-width: 640px) {
-      .mobile-nav { display: flex; }
-      .nav-links { display: none; }
-      .btn-desktop { display: none; }
-    }
-
-    .mobile-nav-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      background: none;
-      border: none;
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: var(--slate-400);
-      cursor: pointer;
-    }
-
-    .mobile-nav-btn.active {
-      color: var(--emerald-600);
-    }
-
-    .mobile-add-btn {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: var(--emerald-500);
-      color: white;
-      border: 4px solid var(--slate-50);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: -24px;
-      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-      cursor: pointer;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 88px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--slate-900);
-      color: white;
-      padding: 14px 24px;
-      border-radius: 14px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      box-shadow: var(--shadow-lg);
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      z-index: 10000;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    .hidden { display: none !important; }
-
-    .auth-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      padding: 16px;
-    }
-    .auth-card {
-      background: white;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-lg);
-      max-width: 480px;
-      width: 100%;
-      padding: 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      position: relative;
-    }
-    .auth-title {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: var(--slate-900);
-      text-align: center;
-      margin-bottom: 6px;
-    }
-    .auth-subtitle {
-      font-size: 0.88rem;
-      color: var(--slate-500);
-      text-align: center;
-      margin-top: -12px;
-      margin-bottom: 12px;
-    }
-    .auth-btn-google {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      height: 52px;
-      border-radius: var(--radius);
-      background: #4285F4;
-      color: white;
-      font-weight: 700;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
-      transition: all 0.15s ease;
-      font-size: 1rem;
-    }
-    .auth-btn-google:hover {
-      background: #357ae8;
-    }
-    .auth-btn-google:active {
-      transform: scale(0.98);
-    }
-    .auth-btn-guest {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      height: 52px;
-      border-radius: var(--radius);
-      background: var(--slate-100);
-      color: var(--slate-700);
-      font-weight: 700;
-      border: 1px solid var(--slate-200);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      font-size: 0.95rem;
-    }
-    .auth-btn-guest:hover {
-      background: var(--slate-200);
-    }
-    .auth-config-toggle {
-      font-size: 0.82rem;
-      color: var(--emerald-600);
-      text-decoration: underline;
-      cursor: pointer;
-      text-align: center;
-      background: none;
-      border: none;
-      font-weight: 600;
-    }
-    .auth-config-panel {
-      border-top: 1px solid var(--slate-100);
-      padding-top: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .auth-config-panel label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--slate-600);
-    }
-    .auth-config-panel input {
-      height: 38px;
-      font-size: 0.8rem;
-    }
-  </style>
 </head>
 <body>
 
-  <!-- Page Loading Overlay (with auto-dismiss failsafe) -->
+  <!-- สถานะโหลดข้อมูลจากฐานข้อมูล MongoDB Atlas -->
   <div id="page-loading">
     <div class="spinner"></div>
-    <div style="font-size:0.9rem;color:var(--slate-500);font-weight:600;">กำลังโหลด AgriDash...</div>
+    <div style="font-size:1rem;color:var(--slate-800);font-weight:700;" id="loading-text">กำลังเชื่อมต่อฐานข้อมูล MongoDB Atlas...</div>
+    <div style="font-size:0.82rem;color:var(--slate-500);font-weight:500;">ระบบบริหารจัดการสวนทุเรียน AgriDash Durian Pro</div>
   </div>
   <script>
-    // Failsafe auto-dismiss: ensure loading spinner never blocks the user
     setTimeout(function() {
       var l = document.getElementById('page-loading');
       if (l) {
         l.style.opacity = '0';
         l.style.pointerEvents = 'none';
-        setTimeout(function() { l.style.display = 'none'; }, 300);
+        setTimeout(function() { l.style.display = 'none'; }, 350);
       }
-    }, 700);
+    }, 800);
   </script>
 
-
-  <!-- Connection Status Bar -->
+  <!-- แถบแจ้งเตือนสถานะการเชื่อมต่อ -->
   <div id="connection-status-bar" class="hidden"></div>
 
+  <!-- รายการแนะนำชื่อปุ๋ย/ยา/อุปกรณ์อัตโนมัติ -->
+  <datalist id="agri-product-suggestions">
+    <option value="ปุ๋ยเคมี 15-15-15"></option>
+    <option value="ปุ๋ยเคมี 8-24-24"></option>
+    <option value="ปุ๋ยเคมี 13-13-21"></option>
+    <option value="ปุ๋ยเคมี 12-12-17-2"></option>
+    <option value="ปุ๋ยแคลเซียมไนเตรต 15-0-0"></option>
+    <option value="ปุ๋ยเกร็ดสะสมอาหาร 0-52-34"></option>
+    <option value="ปุ๋ยทางใบ 0-0-50"></option>
+    <option value="แคลเซียม-โบรอน"></option>
+    <option value="แมกนีเซียมคีเลต"></option>
+    <option value="ซิงค์คีเลต"></option>
+    <option value="สาหร่ายทะเลสกัดเข้มข้น"></option>
+    <option value="น้ำตาลทางด่วนซอร์บิทอล"></option>
+    <option value="สารแพคโคลบิวทราโซล"></option>
+    <option value="อะบาเมกติน"></option>
+    <option value="ไทอะมีทอกแซม"></option>
+    <option value="อิมิดาโคลพริด"></option>
+    <option value="ฟิโพรนิล"></option>
+    <option value="แมนโคเซบ"></option>
+    <option value="คาร์เบนดาซิม"></option>
+    <option value="เมทาแลกซิล"></option>
+    <option value="ฟอสอีทิล-อะลูมิเนียม"></option>
+    <option value="ยาจับใบเกรดพรีเมียม"></option>
+    <option value="ปูนโดโลไมท์"></option>
+    <option value="ท่อ PE เกษตร"></option>
+    <option value="หัวสปริงเกอร์สวนทุเรียน"></option>
+    <option value="เชือกโยงกิ่งทุเรียน"></option>
+    <option value="น้ำมันดีเซลเครื่องสูบน้ำ"></option>
+  </datalist>
 
-  <!-- Firebase Auth Modal Overlay -->
-  <div id="auth-modal" class="auth-overlay">
+  <!-- หน้าต่างเข้าสู่ระบบ -->
+  <div id="auth-modal" class="auth-overlay hidden">
     <div class="auth-card">
-      <div class="brand" style="justify-content:center; font-size:1.6rem; margin-bottom:10px;">
+      <div class="brand" style="justify-content:center; font-size:1.55rem; margin-bottom:10px;">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
         AgriDash Durian Pro
       </div>
       <div class="auth-title" id="auth-modal-title">ลงชื่อเข้าใช้งานระบบสวนทุเรียน</div>
-      <div class="auth-subtitle">ข้อมูลของคุณถูกเก็บรักษาอย่างปลอดภัยในฐานข้อมูล MongoDB ของคุณแบบแยกส่วนบุคคล 100%</div>
-      
-      
-      <!-- Register Only: Names -->
+      <div class="auth-subtitle">ข้อมูลสวนและสมุดบัญชีของคุณถูกจัดเก็บอย่างปลอดภัยบนฐานข้อมูลคลาวด์ MongoDB Atlas</div>
+
       <div class="form-group register-only" style="display: none; text-align:left; margin-bottom: 12px;">
         <div style="display: flex; gap: 10px;">
-          <div style="flex: 1; margin-bottom: 0;">
-            <label>ชื่อ (First Name)</label>
+          <div style="flex: 1;">
+            <label>ชื่อ</label>
             <input type="text" id="reg-firstname" class="form-control" placeholder="ชื่อจริง" />
           </div>
-          <div style="flex: 1; margin-bottom: 0;">
-            <label>นามสกุล (Last Name)</label>
+          <div style="flex: 1;">
+            <label>นามสกุล</label>
             <input type="text" id="reg-lastname" class="form-control" placeholder="นามสกุล" />
           </div>
         </div>
       </div>
 
-      <!-- Register Only: Farm Name -->
       <div class="form-group register-only" style="display: none; text-align:left; margin-bottom: 12px;">
-        <label>ชื่อสวนทุเรียน (Farm / Orchard Name)</label>
+        <label>ชื่อสวนทุเรียน</label>
         <input type="text" id="reg-farmname" class="form-control" placeholder="เช่น สวนทุเรียนลุงสมหมาย" />
       </div>
 
-      <!-- Register Only: Phone Number -->
       <div class="form-group register-only" style="display: none; text-align:left; margin-bottom: 12px;">
-        <label>เบอร์โทรศัพท์ (Phone Number)</label>
+        <label>เบอร์โทรศัพท์</label>
         <input type="tel" id="reg-phone" class="form-control" placeholder="08X-XXX-XXXX" />
       </div>
 
-      <!-- Always: Email -->
       <div class="form-group" style="text-align:left; margin-bottom: 12px;">
-        <label>อีเมลผู้ใช้งาน (Email Address)</label>
-        <input type="email" id="login-email-input" class="form-control" placeholder="techawat@gmail.com" />
+        <label>อีเมลผู้ใช้งาน</label>
+        <input type="email" id="login-email-input" class="form-control" placeholder="example@gmail.com" />
       </div>
 
-      <!-- Always: Password -->
       <div class="form-group" style="text-align:left; margin-bottom: 12px;">
-        <label>รหัสผ่าน (Password)</label>
+        <label>รหัสผ่าน</label>
         <input type="password" id="login-password-input" class="form-control" placeholder="••••••••" />
       </div>
 
-      <!-- Register Only: Confirm Password -->
       <div class="form-group register-only" style="display: none; text-align:left; margin-bottom: 20px;">
-        <label>ยืนยันรหัสผ่านอีกครั้ง (Confirm Password)</label>
+        <label>ยืนยันรหัสผ่านอีกครั้ง</label>
         <input type="password" id="reg-repassword" class="form-control" placeholder="••••••••" />
       </div>
 
@@ -861,627 +117,520 @@
       </button>
 
       <button class="auth-btn-guest" onclick="handleGuestMode(event)">
-        🚀 เข้าสู่ระบบในฐานะ Guest (ทดลองใช้)
+        🚀 ทดลองใช้งานทันที
       </button>
 
-      <div style="margin-top: 14px; font-size: 0.84rem; color: var(--slate-600); text-align:center;">
+      <div style="margin-top: 14px; font-size: 0.88rem; color: var(--slate-600); text-align:center;">
         <span id="auth-toggle-text">ยังไม่มีบัญชีใช่หรือไม่?</span>&nbsp;
-        <a href="#" id="auth-toggle-link" style="color: var(--emerald-600); font-weight: 700; text-decoration: underline;" onclick="toggleAuthMode(event)">สมัครสมาชิกใหม่</a>
+        <a href="#" id="auth-toggle-link" style="color: var(--emerald-700); font-weight: 800; text-decoration: underline;" onclick="toggleAuthMode(event)">สมัครสมาชิกใหม่</a>
       </div>
-
     </div>
   </div>
 
-  <!-- Header Navigation -->
+  <!-- แถบเมนูนำทางส่วนหัว (ยุบรวมหมวดหมู่ให้กระชับ 5 หมวดหลัก) -->
   <header>
-    <div class="brand">
+    <div class="brand" style="cursor:pointer" onclick="switchView('dashboard')">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
       AgriDash Durian Pro
     </div>
+
     <div class="nav-links">
-      <button class="nav-btn active" id="nav-dash-btn" onclick="switchView('dashboard')">🌳 ภาพรวมสวน</button>
-      <button class="nav-btn" id="nav-agrotech-btn" onclick="switchView('agrotech')">🔬 ดิน น้ำ & อากาศ</button>
-      <button class="nav-btn" id="nav-calc-btn" onclick="switchView('calc')">🧮 คำนวณปุ๋ย & ยาพ่น</button>
-      <button class="nav-btn" id="nav-fin-btn" onclick="switchView('finance')">📊 กราฟงบการเงิน</button>
-      <button class="nav-btn" id="nav-field-btn" onclick="switchView('field')">⚙️ บันทึกแปลง</button>
-      <button class="nav-btn" id="nav-plant-btn" onclick="switchView('plant')">🌿 สำรวจต้น</button>
-      <button class="nav-btn" id="nav-acc-btn" onclick="switchView('accounting')">💰 สมุดบัญชี</button>
+      <button class="nav-btn active" id="nav-dashboard-btn" onclick="switchView('dashboard')">🌳 ภาพรวม</button>
+      <button class="nav-btn" id="nav-agrotech-btn" onclick="switchView('agrotech')">🔬 ดิน & อากาศ</button>
+      <button class="nav-btn" id="nav-calc-btn" onclick="switchView('calc')">🧮 คำนวณปุ๋ย & ยา</button>
+      <button class="nav-btn" id="nav-field-btn" onclick="switchView('field')">📋 งานแปลง & ต้น</button>
+      <button class="nav-btn" id="nav-accounting-btn" onclick="switchView('accounting')">💰 สมุดบัญชี</button>
     </div>
-    <div style="display:flex; align-items:center; gap:8px;">
-      <button class="btn btn-outline" style="height:36px; width:36px; padding:0; display:none; align-items:center; justify-content:center; border-radius:10px;" id="mobile-more-btn" onclick="openMobileSheet()" aria-label="เมนูทั้งหมด" title="เมนูทั้งหมด">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="1"></circle>
-          <circle cx="19" cy="12" r="1"></circle>
-          <circle cx="5" cy="12" r="1"></circle>
+
+    <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <button class="btn btn-outline" style="height:38px; width:38px; padding:0; display:none; align-items:center; justify-content:center; border-radius:10px;" id="mobile-more-btn" onclick="openMobileSheet()" aria-label="เมนูลัด" title="เมนูลัด">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="1.2"></circle>
+          <circle cx="19" cy="12" r="1.2"></circle>
+          <circle cx="5" cy="12" r="1.2"></circle>
         </svg>
       </button>
-      <span id="sync-indicator" class="sync-indicator btn-desktop" style="display:none;"></span>
+      <span id="sync-indicator" class="sync-indicator btn-desktop">✅ ซิงค์แล้ว</span>
       <span class="status-dot online btn-desktop" id="status-dot"></span>
-
-      <div id="status-cloud-text" style="font-size:0.72rem; color:var(--emerald-600); display:none;" class="btn-desktop"></div>
+      <div id="status-cloud-text" style="font-size:0.78rem; font-weight:700; color:var(--emerald-700); display:none;" class="btn-desktop"></div>
       <div class="user-avatar" id="avatar-display" style="cursor:pointer; position:relative;" onclick="toggleSignOutMenu(event)">
         JD
-        <div id="signout-menu" class="hidden" style="position:absolute; top:46px; right:0; background:white; border:1px solid var(--slate-200); box-shadow:var(--shadow-lg); border-radius:12px; padding:10px; min-width:180px; display:flex; flex-direction:column; gap:4px; z-index:1000;">
-          <div style="font-size:0.72rem; color:var(--slate-500); padding:6px 10px; border-bottom:1px solid var(--slate-100); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:170px;" id="user-email-display">guest@local</div>
-          <button class="btn btn-outline" style="height:34px; font-size:0.82rem; width:100%; border:none; background:none; color:var(--rose-600); font-weight:700; text-align:left; justify-content:flex-start; padding:4px 10px; margin:0;" onclick="signOutUser()">🚪 ออกจากระบบ</button>
+        <div id="signout-menu" class="hidden" style="position:absolute; top:48px; right:0; background:white; border:1.5px solid var(--slate-200); box-shadow:var(--shadow-lg); border-radius:14px; padding:10px; min-width:190px; display:flex; flex-direction:column; gap:4px; z-index:1000;">
+          <div style="font-size:0.78rem; font-weight:700; color:var(--slate-600); padding:6px 10px; border-bottom:1px solid var(--slate-100); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:175px;" id="user-email-display">ผู้ใช้งานทั่วไป</div>
+          <button class="btn btn-outline" style="height:36px; font-size:0.86rem; width:100%; border:none; background:none; color:var(--rose-600); font-weight:800; text-align:left; justify-content:flex-start; padding:4px 10px; margin:0;" onclick="signOutUser()">🚪 ออกจากระบบ</button>
         </div>
       </div>
     </div>
   </header>
 
-  <!-- Main Content -->
+  <!-- เนื้อหาหลัก -->
   <main>
-    
-    <!-- 1. ORCHARD AGRONOMY & TREE CARE DASHBOARD (DASHBOARD 1) -->
+
+    <!-- =================================================================
+         1. หน้าภาพรวมสวนทุเรียน
+         ================================================================= -->
     <div id="view-dashboard">
       <div class="page-header">
         <div class="page-title">
-          <h1>🌳 ภาพรวมสวนทุเรียนและการบำรุงพืช (Orchard Agronomy Dashboard)</h1>
-          <p>ติดตามสุขภาพพุ่ม ระยะฟีโนโลยีพืช คาดการณ์ 10 ระยะ สภาพอากาศ และประวัติปฏิบัติงานหน้าแปลง</p>
+          <h1>🌳 ภาพรวมสวนทุเรียนและการบำรุงพืช</h1>
+          <p>ติดตามสุขภาพพุ่ม ระยะการเจริญเติบโต คาดการณ์เก็บเกี่ยว 10 ระยะ สภาพอากาศ และประวัติงานแปลง</p>
         </div>
         <div style="display:flex; gap:10px;">
           <button class="btn btn-outline btn-desktop" onclick="switchView('agrotech')">
-            🔬 ดูตรวจวัดดิน & เซนเซอร์
+            🔬 ตรวจวัดดิน & อากาศ
           </button>
           <button class="btn btn-primary btn-desktop" onclick="switchView('field')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            เพิ่มบันทึกกิจกรรมแปลง
+            ➕ บันทึกงานแปลง
           </button>
         </div>
       </div>
 
-      <!-- Agro-Weather Dynamic Alarms -->
+      <!-- แจ้งเตือนความเสี่ยงโรคพืชตามสภาพอากาศ -->
       <div class="weather-alert-card danger">
-        <div style="font-size:1.8rem">⚠️</div>
+        <div style="font-size:1.9rem">⚠️</div>
         <div style="flex:1">
-          <h4 style="font-weight:800; font-size:0.95rem">เตือนภัยสภาพอากาศ: มีความเสี่ยงโรคไฟทอปธอรา (Phytophthora Risk Index: 88%)</h4>
-          <p style="font-size:0.83rem; margin-top:3px; opacity:0.9">ความชื้นสัมพัทธ์สูง (%RH 92%) ต่อเนื่อง 48 ชม. และมีสะสมอุณหภูมิ GDD เหมาะสมต่อการระบาด แนะนำฉีดพ่นเมทาแลกซิล หรือ ฟอสอีทิล-อะลูมิเนียม</p>
+          <h4 style="font-weight:800; font-size:1rem">แจ้งเตือนสภาพอากาศ: เฝ้าระวังโรครากเน่าโคนเน่าไฟทอปธอรา (ความเสี่ยง 88%)</h4>
+          <p style="font-size:0.88rem; margin-top:3px; font-weight:500;">ความชื้นสัมพัทธ์สูง 92% ต่อเนื่อง 48 ชม. แนะนำตรวจโคนต้นและฉีดพ่นสารป้องกันเชื้อราเมทาแลกซิล หรือ ฟอสอีทิล-อะลูมิเนียม</p>
         </div>
-        <button class="btn btn-outline" style="height:36px; padding:0 12px; font-size:0.8rem" onclick="switchView('agrotech')">ตรวจวิเคราะห์อากาศ</button>
+        <button class="btn btn-outline" style="height:40px; padding:0 14px; font-size:0.86rem" onclick="switchView('agrotech')">ดูผลวิเคราะห์อากาศ</button>
       </div>
 
-      <!-- Agronomy KPI Cards -->
+      <!-- การ์ดสรุปดัชนีหลัก 4 ใบ -->
       <div class="kpi-grid">
-        <div class="card">
+        <div class="card" style="border-left: 5px solid var(--blue-500);">
           <div class="kpi-top">
             <div>
-              <div class="kpi-label">ความชื้นดิน 15cm / 30cm</div>
-              <div class="kpi-value" style="color:var(--blue-600)">42% / 55%</div>
+              <div class="kpi-label">ความชื้นดิน 15 ซม. / 30 ซม.</div>
+              <div class="kpi-value" style="color:var(--blue-700)">42% / 55%</div>
             </div>
             <div class="kpi-icon">💧</div>
           </div>
           <div class="kpi-trend trend-up">🟢 อยู่ในเกณฑ์เหมาะสมกักน้ำทำสาร</div>
         </div>
 
-        <div class="card">
+        <div class="card" style="border-left: 5px solid var(--emerald-500);">
           <div class="kpi-top">
             <div>
-              <div class="kpi-label">ค่า pH ดิน & ค่า EC (ความเค็ม)</div>
-              <div class="kpi-value">pH 6.2 <span style="font-size:1rem; color:var(--slate-500)">| EC 1.2</span></div>
+              <div class="kpi-label">ค่ากรด-ด่างดิน & ความเค็ม</div>
+              <div class="kpi-value">pH 6.2 <span style="font-size:1.1rem; color:var(--slate-600)">| EC 1.2</span></div>
             </div>
             <div class="kpi-icon">🧪</div>
           </div>
-          <div class="kpi-trend trend-up">🟢 ดูดซึม N-P-K และ Ca-Mg ได้เต็มที่</div>
+          <div class="kpi-trend trend-up">🟢 รากดูดซึมธาตุอาหารได้เต็มที่</div>
         </div>
 
-        <div class="card">
+        <div class="card" style="border-left: 5px solid var(--amber-500);">
           <div class="kpi-top">
             <div>
-              <div class="kpi-label">สะสมอุณหภูมิ (GDD)</div>
-              <div class="kpi-value" style="color:var(--amber-600)">1,240 GDD</div>
-            </div>
-            <div class="kpi-icon">🌡️</div>
-          </div>
-          <div class="kpi-trend trend-warn">⚡ ความเครียดความร้อน (Heat Stress) ต่ำ</div>
-        </div>
-
-        <div class="card">
-          <div class="kpi-top">
-            <div>
-              <div class="kpi-label">ดัชนีความสมบูรณ์พุ่ม (Vigour Index)</div>
-              <div class="kpi-value">4.8 <span style="font-size:1.1rem; color:var(--amber-500)">★</span></div>
+              <div class="kpi-label">ความสมบูรณ์ทรงพุ่ม</div>
+              <div class="kpi-value" style="color:var(--amber-700)">4.8 <span style="font-size:1.25rem; color:var(--amber-500)">★</span></div>
             </div>
             <div class="kpi-icon">🌳</div>
           </div>
-          <div class="kpi-trend trend-up">▲ ระยะเพสลาด 85% สมบูรณ์พร้อม</div>
+          <div class="kpi-trend trend-up">▲ ระยะใบเพสลาด 85% สมบูรณ์ดี</div>
+        </div>
+
+        <div class="card" style="border-left: 5px solid var(--purple-500);" onclick="switchView('accounting')" style="cursor:pointer">
+          <div class="kpi-top">
+            <div>
+              <div class="kpi-label">ยอดเงินสุทธิสวน</div>
+              <div class="kpi-value" style="color:var(--emerald-700)" id="dash-net-profit">฿0.00</div>
+            </div>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-trend trend-up">คลิกเพื่อดูสมุดบัญชีรายรับ-รายจ่าย</div>
         </div>
       </div>
 
-      <!-- 🌸 COMPLETE 10-STAGE DURIAN PHENOLOGY & HARVEST FORECAST CARD -->
+      <!-- ระบบคำนวณคาดการณ์การเจริญเติบโตทุเรียน -->
       <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%); border-color: var(--emerald-200);">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px;">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:42px; height:42px; border-radius:12px; background:var(--emerald-100); display:flex; align-items:center; justify-content:center; color:var(--emerald-700); font-size:1.3rem;">🌱</div>
+            <div style="width:44px; height:44px; border-radius:12px; background:var(--emerald-100); display:flex; align-items:center; justify-content:center; color:var(--emerald-700); font-size:1.35rem;">🌱</div>
             <div>
-              <h3 style="font-size:1.15rem; font-weight:800; color:var(--slate-900)">ระบบคำนวณคาดการณ์การเจริญเติบโตทุเรียน (Complete Durian Predictor)</h3>
-              <p style="font-size:0.85rem; color:var(--slate-500)">คำนวณระยะพัฒนาการของตา/ดอก/ผลทุเรียน (10 ระยะ) หรือชุดพัฒนาการใบใหม่ (6 ระยะ)</p>
+              <h3 style="font-size:1.18rem; font-weight:800; color:var(--slate-900)">ตารางคาดการณ์ระยะการเจริญเติบโตและวันเก็บเกี่ยว</h3>
+              <p style="font-size:0.88rem; color:var(--slate-600)">คำนวณระยะพัฒนาการของดอกและผลทุเรียน 10 ระยะ หรือชุดใบใหม่ 6 ระยะ</p>
             </div>
           </div>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-outline" style="height:36px; padding:0 12px; font-size:0.8rem; font-weight:700;" onclick="switchPredictorMode('flower')">🌸 โหมดทำดอก/ผล</button>
-            <button class="btn btn-outline" style="height:36px; padding:0 12px; font-size:0.8rem; font-weight:700;" onclick="switchPredictorMode('leaf')">🍃 โหมดทำใบชุดใหม่</button>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-outline" id="btn-pred-flower" style="height:40px; padding:0 14px; font-size:0.86rem;" onclick="switchPredictorMode('flower')">🌸 โหมดทำดอกและผล</button>
+            <button class="btn btn-outline" id="btn-pred-leaf" style="height:40px; padding:0 14px; font-size:0.86rem;" onclick="switchPredictorMode('leaf')">🍃 โหมดทำชุดใบใหม่</button>
           </div>
         </div>
 
-        <!-- Predictor Dynamic Controls -->
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; background:white; padding:16px; border-radius:10px; border:1px solid var(--slate-200); margin-bottom:16px; align-items:flex-end;">
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:14px; background:white; padding:16px; border-radius:12px; border:1.5px solid var(--slate-200); margin-bottom:16px; align-items:flex-end;">
           <div class="form-group" style="margin-bottom:0;">
-            <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600); display:block; margin-bottom:4px;">👑 เลือกสายพันธุ์ทุเรียน</label>
-            <select id="dash-predictor-variety" class="form-control" style="height:38px; font-size:0.85rem;" onchange="syncVariety('dash')">
-              <option value="monthong" selected>หมอนทอง (Monthong - 120 วัน)</option>
-              <option value="kradoom">กระดุมทอง (Kradoom Thong - 90 วัน)</option>
-              <option value="chanee">ชะนี / พวงมณี (Chanee - 105 วัน)</option>
-              <option value="kanyao">ก้านยาว (Kanyao - 130 วัน)</option>
+            <label style="font-size:0.82rem;">👑 สายพันธุ์ทุเรียน</label>
+            <select id="dash-predictor-variety" class="form-control" style="height:44px;" onchange="syncVariety('dash')">
+              <option value="monthong" selected>หมอนทอง — 120 วัน</option>
+              <option value="kradoom">กระดุมทอง — 90 วัน</option>
+              <option value="chanee">ชะนี / พวงมณี — 105 วัน</option>
+              <option value="kanyao">ก้านยาว — 130 วัน</option>
             </select>
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600); display:block; margin-bottom:4px;">📅 วันเริ่มต้นทำกิจกรรม / วันราดสาร</label>
-            <input type="date" id="dash-predictor-date" class="form-control" style="height:38px; font-size:0.85rem;" onchange="calculateFlowerDates()" />
+            <label style="font-size:0.82rem;">📅 วันเริ่มทำสาร / แทงยอด</label>
+            <input type="date" id="dash-predictor-date" class="form-control" style="height:44px;" onchange="calculateFlowerDates(); updateAllThaiDateBadges();" />
           </div>
           <div class="form-group" style="margin-bottom:0;">
-            <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600); display:block; margin-bottom:4px;">🧪 ระยะเวลาฤทธิ์ของสาร (วัน)</label>
-            <input type="number" id="dash-predictor-days" class="form-control" style="height:38px; font-size:0.85rem;" value="35" onchange="calculateFlowerDates()" />
+            <label style="font-size:0.82rem;">🧪 ระยะสารออกฤทธิ์ (วัน)</label>
+            <input type="number" id="dash-predictor-days" class="form-control" style="height:44px;" value="35" onchange="calculateFlowerDates()" />
           </div>
-          <button class="btn btn-primary" style="height:38px; font-size:0.82rem; font-weight:700; background:var(--emerald-600);" onclick="savePredictorToLog()">
+          <button class="btn btn-primary" style="height:44px;" onclick="savePredictorPlan()">
             ➕ บันทึกแผนลงประวัติแปลง
           </button>
         </div>
 
-        <div id="dash-10-stage-grid" class="stage-10-grid">
-          <!-- Dynamically filled by JS -->
-        </div>
+        <div id="dash-10-stage-grid" class="stage-10-grid"></div>
       </div>
 
-      <!-- Recent Operations Table -->
+      <!-- ตารางประวัติการทำงานในแปลงล่าสุด -->
       <div class="card" style="margin-bottom:24px;">
-        <div class="chart-card-header">ประวัติการทำงานในแปลงล่าสุด (Recent Field Operations)</div>
+        <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <span>📋 ประวัติการทำงานในแปลงล่าสุด</span>
+          <button class="btn btn-outline" style="height:38px; padding:0 14px; font-size:0.84rem;" onclick="switchView('field')">➕ เพิ่มบันทึกงานแปลง</button>
+        </div>
         <div class="table-container">
           <table class="table-responsive-card">
             <thead>
-
               <tr>
                 <th>วันที่</th>
-                <th>แปลง/สวน</th>
+                <th>แปลงสวน</th>
                 <th>กิจกรรม</th>
-                <th>รายละเอียด / สูตรผสมพ่นยา / ทำสาร</th>
+                <th>รายละเอียด / สูตรพ่นยา / ทำสาร</th>
                 <th style="text-align:right">ค่าใช้จ่าย</th>
+                <th style="text-align:center">จัดการ</th>
               </tr>
             </thead>
-            <tbody id="table-body">
-              <tr>
-                <td>2026-07-24</td>
-                <td style="font-weight:700; color:var(--slate-900)">1) สวนหมอนทอง (บ้าน)</td>
-                <td><span class="badge-op">🌸 ราดสาร / ทำสารแพคโคล</span></td>
-                <td style="font-size:0.82rem; color:var(--emerald-700); font-weight:600">ทำสารแพคโคลบิวทราโซล (สารออกฤทธิ์ 35 วัน) ➔ คาดการณ์แทงตาดอก 28 ส.ค. 2569</td>
-                <td style="text-align:right; font-weight:700; color:var(--slate-900)">฿3,500.00</td>
-              </tr>
-            </tbody>
+            <tbody id="table-body"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Plant Behavior Survey History Table -->
+      <!-- ตารางประวัติการสำรวจอาการต้น -->
       <div class="card">
-        <div class="chart-card-header">🌿 ประวัติบันทึกการสำรวจอาการต้นและฟีโนโลยี (Plant Behavior Logs)</div>
+        <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <span>🌿 ประวัติการสำรวจสุขภาพต้นทุเรียน</span>
+          <button class="btn btn-outline" style="height:38px; padding:0 14px; font-size:0.84rem;" onclick="switchView('plant')">➕ เพิ่มผลสำรวจต้น</button>
+        </div>
         <div class="table-container">
           <table class="table-responsive-card">
             <thead>
-
               <tr>
                 <th>วันที่สำรวจ</th>
-                <th>แปลง/สวน</th>
-                <th>ระยะการเจริญ (Phenology Stage)</th>
-                <th>สภาพใบ / ศัตรูพืชที่พบ</th>
-                <th>ลำต้น/ไฟทอป</th>
-                <th>ข้อเสนอแนะนักวิชาการ</th>
+                <th>แปลงสวน</th>
+                <th>ระยะการเจริญเติบโต</th>
+                <th>สภาพใบ / ศัตรูพืช</th>
+                <th>สภาพลำต้น</th>
+                <th>ข้อเสนอแนะการดูแล</th>
+                <th style="text-align:center">จัดการ</th>
               </tr>
             </thead>
-            <tbody id="plant-table-body">
-              <tr>
-                <td>2026-07-24</td>
-                <td style="font-weight:700; color:var(--slate-900)">1) สวนหมอนทอง (บ้าน)</td>
-                <td><span class="badge-stage">🍃 ใบเพสลาด (Maturing Leaf)</span></td>
-                <td style="font-size:0.82rem; color:var(--slate-600)">เขียวเข้มมันเงา (ปกติ), พบเพลี้ยไก่แจ้ประปราย</td>
-                <td style="font-size:0.82rem; color:var(--emerald-600); font-weight:700">ลำต้นปกติ ไร้แผล</td>
-                <td style="font-size:0.82rem; color:var(--slate-700)">ฉีดป้องกันเพลี้ยไก่แจ้ + พ่นซิงค์คีเลตบำรุงใบเพสลาด</td>
-              </tr>
-            </tbody>
+            <tbody id="plant-table-body"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- 2. MODULE 1: SOIL & WATER ANALYTICS + AGRO-WEATHER (MODULE 1 & 3 TAB) -->
+    <!-- =================================================================
+         2. หน้าตรวจวิเคราะห์ดิน น้ำ และสภาพอากาศ
+         ================================================================= -->
     <div id="view-agrotech" class="hidden">
       <div class="page-header">
         <div class="page-title">
-          <h1>🔬 ระบบบันทึกความชื้นดิน ค่าเคมี & สภาพอากาศ (Soil, Water & Agro-Weather Analytics)</h1>
-          <p>ป้อนข้อมูลตรวจวัดสภาพดินชั้นบน/ชั้นราก, ค่ากรด-ด่าง pH, EC ความเค็มดิน และวิเคราะห์ดัชนีพยากรณ์โรคพร้อมคำแนะนำการจัดการโดยตรงจากผู้เชี่ยวชาญ</p>
+          <h1>🔬 ระบบบันทึกความชื้นดิน ค่าเคมี และสภาพอากาศ</h1>
+          <p>บันทึกค่าตรวจวัดสภาพดินชั้นบน ชั้นราก ค่ากรด-ด่าง ความเค็มดิน และรับคำแนะนำการจัดการน้ำและปุ๋ยทันที</p>
         </div>
       </div>
 
-      <!-- Layout Grid: Input Controls on Left, Graph on Right -->
       <div class="charts-grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
-        
-        <!-- Input Panel -->
-        <div class="card" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);">
-          <div class="chart-card-header" style="color:var(--slate-800)">📝 ป้อนผลการตรวจวิเคราะห์ดิน น้ำ และอากาศ</div>
-          <div style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
-            
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div class="card">
+          <div class="chart-card-header">📝 ป้อนผลการตรวจวัดดิน น้ำ และอากาศ</div>
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
               <div class="form-group" style="margin-bottom:0;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600);">💧 ดินชั้นบน 15cm (%)</label>
+                <label>💧 ความชื้นดิน 15 ซม. (%)</label>
                 <input type="number" id="input-soil-15" class="form-control" value="42.5" min="0" max="100" step="0.1" oninput="runAgroAnalysis()" />
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600);">💧 ดินชั้นราก 30cm (%)</label>
+                <label>💧 ความชื้นดิน 30 ซม. (%)</label>
                 <input type="number" id="input-soil-30" class="form-control" value="55.0" min="0" max="100" step="0.1" oninput="runAgroAnalysis()" />
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
               <div class="form-group" style="margin-bottom:0;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600);">🧪 ค่ากรด-ด่างดิน (pH)</label>
+                <label>🧪 ค่ากรด-ด่างดิน (pH)</label>
                 <input type="number" id="input-soil-ph" class="form-control" value="6.2" min="0" max="14" step="0.1" oninput="runAgroAnalysis()" />
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600);">⚡ ค่าความเค็มดิน EC (dS/m)</label>
+                <label>⚡ ความเค็มดิน EC (dS/m)</label>
                 <input type="number" id="input-soil-ec" class="form-control" value="1.2" min="0" max="10" step="0.1" oninput="runAgroAnalysis()" />
               </div>
             </div>
 
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
               <div class="form-group" style="margin-bottom:0;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600);">🌡️ อุณหภูมิอากาศ (°C)</label>
+                <label>🌡️ อุณหภูมิอากาศ (°C)</label>
                 <input type="number" id="input-air-temp" class="form-control" value="31.5" step="0.1" oninput="runAgroAnalysis()" />
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600);">☁️ ความชื้นสัมพัทธ์ (%RH)</label>
+                <label>☁️ ความชื้นสัมพัทธ์ (%)</label>
                 <input type="number" id="input-air-hum" class="form-control" value="75" min="0" max="100" oninput="runAgroAnalysis()" />
               </div>
             </div>
 
             <div class="form-group" style="margin-bottom:0;">
-              <label style="font-size:0.75rem; font-weight:700; color:var(--slate-600);">🌧️ ปริมาณน้ำฝนสะสม 24 ชม. (มม.)</label>
+              <label>🌧️ ปริมาณน้ำฝนสะสม 24 ชม. (มม.)</label>
               <input type="number" id="input-rain" class="form-control" value="0" min="0" step="0.1" oninput="runAgroAnalysis()" />
             </div>
 
-            <button class="btn btn-outline" style="height:38px; width:100%; margin-top:10px; font-weight:700;" onclick="saveAgroMeasurements()">💾 บันทึกและวิเคราะห์ค่าล่าสุด</button>
+            <button class="btn btn-primary" style="width:100%; margin-top:6px;" onclick="saveAgroMeasurements()">💾 บันทึกค่าตรวจวัดลงประวัติแปลง</button>
           </div>
         </div>
 
-        <!-- Interactive Trend Display -->
         <div class="card">
           <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>📈 กราฟแนวโน้มความชื้นดิน 15cm / 30cm (ความชื้นสัมพันธ์)</span>
-            <span style="font-size:0.8rem; font-weight:700; color:var(--emerald-600); background:var(--emerald-50); padding:4px 10px; border-radius:12px;">Interactive Point</span>
+            <span>📈 กราฟแนวโน้มความชื้นดิน 15 ซม. / 30 ซม.</span>
+            <span style="font-size:0.8rem; font-weight:800; color:var(--emerald-700); background:var(--emerald-100); padding:4px 10px; border-radius:12px;">อัปเดตอัตโนมัติ</span>
           </div>
 
-          <div class="svg-chart-container" style="position:relative;">
+          <div class="svg-chart-container">
             <svg width="100%" height="220" viewBox="0 0 500 200" preserveAspectRatio="none" id="agro-svg-chart">
-              <!-- Grid lines -->
-              <line x1="0" y1="40" x2="500" y2="40" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="0" y1="100" x2="500" y2="100" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="0" y1="160" x2="500" y2="160" stroke="#f1f5f9" stroke-width="1"/>
-
-              <!-- 15cm Moisture Line (Blue) -->
-              <path d="M 20 60 Q 100 140, 200 150 T 350 80 T 480 65" fill="none" stroke="#3b82f6" stroke-width="4" stroke-linecap="round" id="path-soil-15"/>
-              
-              <!-- 30cm Moisture Line (Green) -->
-              <path d="M 20 80 Q 100 110, 200 120 T 350 90 T 480 75" fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="5 4" stroke-linecap="round" id="path-soil-30"/>
-
-              <!-- Interactive Points -->
-              <circle cx="200" cy="150" r="7" fill="#3b82f6" stroke="white" stroke-width="2" style="cursor:pointer" onclick="showSensorTooltip('วันทำสารแพคโคล', '15cm: 18% (งดน้ำ)', '30cm: 32% (ดินแห้งเร่งดอก)')"/>
-              <circle cx="480" cy="65" r="7" fill="#3b82f6" stroke="white" stroke-width="2" style="cursor:pointer" id="chart-point-current"/>
+              <line x1="0" y1="40" x2="500" y2="40" stroke="#e2e8f0" stroke-width="1"/>
+              <line x1="0" y1="100" x2="500" y2="100" stroke="#e2e8f0" stroke-width="1"/>
+              <line x1="0" y1="160" x2="500" y2="160" stroke="#e2e8f0" stroke-width="1"/>
+              <path d="M 20 60 Q 100 140, 200 150 T 350 80 T 480 65" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" id="path-soil-15"/>
+              <path d="M 20 80 Q 100 110, 200 120 T 350 90 T 480 75" fill="none" stroke="#059669" stroke-width="3.5" stroke-dasharray="6 4" stroke-linecap="round" id="path-soil-30"/>
+              <circle cx="200" cy="150" r="7" fill="#2563eb" stroke="white" stroke-width="2" style="cursor:pointer" onclick="showSensorTooltip('วันทำสารแพคโคล', '15 ซม.: 18% (งดน้ำ)', '30 ซม.: 32% (ดินแห้งเร่งดอก)')"/>
+              <circle cx="480" cy="65" r="8" fill="#2563eb" stroke="white" stroke-width="2.5" style="cursor:pointer" id="chart-point-current"/>
             </svg>
           </div>
 
-          <div style="display:flex; justify-content:space-between; font-size:0.8rem; font-weight:700; color:var(--slate-400); margin-top:10px;">
-            <span>ก่อนทำสาร 7 วัน</span><span>วันทำสาร (งดน้ำ)</span><span>หลังทำสาร 15 วัน</span><span>ปัจจุบัน (ย้ายตามป้อนเข้า)</span>
+          <div style="display:flex; justify-content:space-between; font-size:0.82rem; font-weight:700; color:var(--slate-600); margin-top:10px;">
+            <span>ก่อนทำสาร 7 วัน</span><span>วันทำสาร</span><span>หลังทำสาร 15 วัน</span><span>ค่าตรวจวัดปัจจุบัน</span>
           </div>
 
-          <div id="sensor-tt-box" style="margin-top:14px; padding:12px; background:var(--blue-50); border-radius:10px; font-size:0.85rem; color:var(--blue-900);">
-            💡 <strong>แนวโน้มการดูดซึมน้ำ</strong>: จุดสีน้ำเงินปลายสุดบนกราฟจะเคลื่อนย้ายพิกัดตามระดับความชื้นดินชั้น 15cm ที่คุณป้อนเข้ามาแบบเรียลไทม์
+          <div id="sensor-tt-box" style="margin-top:14px; padding:12px 14px; background:var(--blue-50); border:1px solid var(--blue-200); border-radius:10px; font-size:0.88rem; color:var(--blue-800); font-weight:600;">
+            💡 <strong>แนวโน้มการดูดซึมน้ำ</strong>: จุดสีน้ำเงินขวาสุดจะปรับระดับตามค่าความชื้นดิน 15 ซม. ที่คุณป้อนทันที
           </div>
         </div>
       </div>
 
-      <!-- KPI Dynamic Grid -->
       <div class="kpi-grid" style="margin-top:20px;">
         <div class="card" style="border-left: 5px solid var(--blue-500)">
-          <div class="kpi-label">ความชื้นดินชั้นบน (15 cm)</div>
-          <div class="kpi-value" id="kpi-soil-15" style="color:var(--blue-600)">42.5%</div>
+          <div class="kpi-label">ความชื้นดินชั้นบน 15 ซม.</div>
+          <div class="kpi-value" id="kpi-soil-15" style="color:var(--blue-700)">42.5%</div>
           <div class="kpi-trend" id="trend-soil-15">🟢 ดินมีความชื้นปานกลาง</div>
         </div>
-
         <div class="card" style="border-left: 5px solid var(--emerald-500)">
-          <div class="kpi-label">ความชื้นดินชั้นราก (30 cm)</div>
-          <div class="kpi-value" id="kpi-soil-30" style="color:var(--emerald-600)">55.0%</div>
+          <div class="kpi-label">ความชื้นดินชั้นราก 30 ซม.</div>
+          <div class="kpi-value" id="kpi-soil-30" style="color:var(--emerald-700)">55.0%</div>
           <div class="kpi-trend" id="trend-soil-30">🟢 อยู่ในเกณฑ์เหมาะสม</div>
         </div>
-
         <div class="card" style="border-left: 5px solid var(--amber-500)">
-          <div class="kpi-label">ค่าความกรด-ด่าง (Soil pH)</div>
+          <div class="kpi-label">ค่าความกรด-ด่างดิน</div>
           <div class="kpi-value" id="kpi-soil-ph">6.2 pH</div>
-          <div class="kpi-trend" id="trend-soil-ph">🟢 ปลูกทุเรียนได้ดีเยี่ยม (5.5-6.5)</div>
+          <div class="kpi-trend" id="trend-soil-ph">🟢 เหมาะสมต่อทุเรียนดีเยี่ยม</div>
         </div>
-
         <div class="card" style="border-left: 5px solid var(--purple-500)">
-          <div class="kpi-label">ค่าความเค็มดิน (Soil EC)</div>
+          <div class="kpi-label">ค่าความเค็มดิน</div>
           <div class="kpi-value" id="kpi-soil-ec">1.2 dS/m</div>
-          <div class="kpi-trend" id="trend-soil-ec">🟢 ไม่เค็ม ไร้ความเสี่ยงรากไหม้</div>
+          <div class="kpi-trend" id="trend-soil-ec">🟢 ไม่เค็ม ปลอดภัยต่อราก</div>
         </div>
       </div>
 
-      <!-- Expert Advisory Board -->
-      <div class="card" style="margin-top:20px; border: 1px solid var(--emerald-200); background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);">
-        <div class="chart-card-header" style="color:var(--emerald-800); display:flex; align-items:center; gap:8px;">
-          <span>🧑‍🌾 คำแนะนำการบริหารจัดการแปลงโดยผู้เชี่ยวชาญ (Durian Expert Advisory Panel)</span>
+      <div class="card" style="margin-top:20px; border: 1.5px solid var(--emerald-200); background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);">
+        <div class="chart-card-header" style="color:var(--emerald-800);">
+          🧑‍🌾 คำแนะนำการดูแลแปลงตามค่าที่ตรวจวัดได้
         </div>
-        
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:12px;" id="expert-advisory-board">
-          <!-- Populated by JS -->
-        </div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:16px; margin-top:12px;" id="expert-advisory-board"></div>
       </div>
     </div>
 
-    <!-- 3. MODULE 2: FERTILIZER & CHEMICAL CALCULATOR (MODULE 2 TAB) -->
+    <!-- =================================================================
+         3. หน้าคำนวณปุ๋ยและอัตราส่วนผสมยาพ่น
+         ================================================================= -->
     <div id="view-calc" class="hidden">
       <div class="form-container">
-        <div class="page-title" style="margin-bottom: 20px;">
-          <h1>🧮 เครื่องมือคำนวณปุ๋ยและสารเคมีตามอัตราส่วน (Precision Fertilizer & Chemical Calculator)</h1>
-          <p>คำนวณธาตุอาหารหลัก (N-P-K), ธาตุอาหารรอง/เสริม (Mg, Ca, Zn, B), ค่า pH น้ำ และปริมาตรน้ำพ่นต่อน้ำต่อต้น</p>
+        <div class="page-header" style="margin-bottom: 20px;">
+          <div class="page-title">
+            <h1>🧮 คำนวณสูตรปุ๋ยและสารเคมี</h1>
+            <p>คำนวณปริมาณปุ๋ย ธาตุอาหารเสริม พร้อมประมาณการต้นทุน และส่งยอดค่าใช้จ่ายเข้าสมุดบัญชี + Google Sheet ในคลิกเดียว</p>
+          </div>
+          <button type="button" class="btn btn-outline" onclick="openSheetsModal()">
+            📊 Google Sheet สำรอง
+          </button>
         </div>
 
         <div class="card" style="margin-bottom:24px;">
-          <div class="chart-card-header">🌾 1. คำนวณความต้องการธาตุอาหารทุเรียนตามระยะฟีโนโลยี (N-P-K & Micronutrient Calculator)</div>
-          
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;" class="form-group">
+          <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <span>🌾 1. คำนวณสูตรปุ๋ย สารเคมี และต้นทุนตามระยะการเจริญเติบโต</span>
+            <span id="calc-sheet-status-pill" class="badge-stage" style="cursor:pointer;" onclick="openSheetsModal()">📊 กำลังตรวจสอบ Google Sheet...</span>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:14px;" class="form-group">
             <div>
-              <label>เลือกระยะพัฒนาการทุเรียน (Phenology Stage)</label>
+              <label>เลือกระยะการเจริญเติบโตของทุเรียน</label>
               <select id="calc-stage" class="form-control" onchange="calculateNutrients()">
-                <option value="ใบเพสลาด">🍃 ระยะทำใบ / ใบเพสลาด (สะสมอาหาร N-P-K)</option>
-                <option value="เตรียมดอก" selected>🌸 ระยะก่อนทำสาร / สะสมอาหารเตรียมนอก (เน้น P-K, B, Zn)</option>
-                <option value="ดอกบาน">🌺 ระยะดอกบาน / ติดผลอ่อน (เน้น Ca, B, Mg)</option>
-                <option value="ขยายพู">🍈 ระยะขยายพู / สร้างเนื้อ (เน้น K, Ca, Mg)</option>
+                <option value="หางปลา">🌱 ระยะแตกยอด / ใบหางปลา</option>
+                <option value="ใบกาง">🍃 ระยะใบอ่อนกางขยาย</option>
+                <option value="ใบเพสลาด">🌿 ระยะใบเพสลาด</option>
+                <option value="สะสมอาหาร" selected>🌸 ระยะสะสมอาหารเตรียมออกดอก</option>
+                <option value="ดอกบาน">🌺 ระยะดอกบาน / หางแย้ถอดหมวก</option>
+                <option value="ขยายพู">🍈 ระยะขยายพู / สร้างเนื้อ</option>
               </select>
             </div>
             <div>
-              <label>จำนวนต้นทุเรียนในแปลง (จำนวนต้น)</label>
-              <input type="number" id="calc-trees" class="form-control" value="100" min="1" onchange="calculateNutrients()" />
+              <label>ปริมาตรน้ำพ่นรวม (ลิตร)</label>
+              <input type="number" id="calc-trees" class="form-control" value="1000" min="200" step="200" oninput="calculateNutrients()" />
+            </div>
+            <div>
+              <label>🌳 แปลงสวนเป้าหมาย</label>
+              <select id="calc-plot" class="form-control">
+                <option value="1) สวนหมอนทอง (บ้าน)">1) สวนหมอนทอง (บ้าน)</option>
+                <option value="2) สวนกระดุม (บ้าน)">2) สวนกระดุม (บ้าน)</option>
+                <option value="3) สวนมังคุด (กงษีไร่)">3) สวนมังคุด (กงษีไร่)</option>
+                <option value="🏛️ บัญชีกองกลางสวน / กงสี">🏛️ บัญชีกองกลางสวน / กงสี</option>
+                <option value="รวมทุกแปลง">รวมทุกแปลง</option>
+              </select>
             </div>
           </div>
 
-          <div style="background:var(--emerald-50); border:1px solid var(--emerald-200); padding:16px; border-radius:10px; margin-top:16px;">
-            <div style="font-size:0.9rem; font-weight:800; color:var(--emerald-800); margin-bottom:10px;">📋 สูตรและอัตราปุ๋ยที่แนะนำสำหรับ ${100} ต้น:</div>
-            
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;" id="nutrient-results">
-              <div style="background:white; padding:12px; border-radius:8px; border:1px solid var(--emerald-200)">
-                <div style="font-size:0.75rem; color:var(--slate-500); font-weight:700">ปุ๋ยทางดิน (N-P-K)</div>
-                <div style="font-size:1.1rem; font-weight:800; color:var(--emerald-700)" id="rec-npk">8-24-24 (50 กก.)</div>
-                <div style="font-size:0.75rem; color:var(--slate-600)">500 กรัม / ต้น</div>
+          <div style="background:var(--emerald-50); border:1.5px solid var(--emerald-200); padding:18px; border-radius:14px; margin-top:16px;">
+            <div style="font-size:0.95rem; font-weight:800; color:var(--emerald-800); margin-bottom:12px;" id="rec-header-title">📋 สูตรปุ๋ยและสารป้องกันที่แนะนำ (สำหรับถัง 1,000 ลิตร):</div>
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px;">
+              <div style="background:white; padding:14px; border-radius:10px; border:1px solid var(--emerald-200); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="font-size:0.78rem; color:var(--slate-600); font-weight:700">ปุ๋ยทางดินหลัก</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:var(--emerald-800); margin-top:2px;" id="rec-npk">8-24-24 หรือ 9-25-25</div>
+                  <div style="font-size:0.8rem; color:var(--slate-600); margin-top:4px;" id="rec-npk-sub">อัตรา 800 กรัม / ต้น</div>
+                </div>
+                <div style="margin-top:8px; padding-top:6px; border-top:1px dashed var(--slate-200); font-size:0.82rem; font-weight:800; color:var(--rose-700);" id="rec-npk-cost">ประมาณ ฿1,600.00</div>
               </div>
 
-              <div style="background:white; padding:12px; border-radius:8px; border:1px solid var(--emerald-200)">
-                <div style="font-size:0.75rem; color:var(--slate-500); font-weight:700">ธาตุอาหารรอง (Ca, Mg)</div>
-                <div style="font-size:1.1rem; font-weight:800; color:var(--emerald-700)" id="rec-camg">แคลเซียมโบรอน 2 ลิตร</div>
-                <div style="font-size:0.75rem; color:var(--slate-600)">200 cc / น้ำ 200L</div>
+              <div style="background:white; padding:14px; border-radius:10px; border:1px solid var(--emerald-200); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="font-size:0.78rem; color:var(--slate-600); font-weight:700">ธาตุอาหารรอง-เสริม</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:var(--emerald-800); margin-top:2px;" id="rec-camg">แคลเซียม-โบรอน + ซิงค์</div>
+                  <div style="font-size:0.8rem; color:var(--slate-600); margin-top:4px;" id="rec-camg-sub">อัตรา 1.0 ลิตร / ถัง 1,000 ลิตร</div>
+                </div>
+                <div style="margin-top:8px; padding-top:6px; border-top:1px dashed var(--slate-200); font-size:0.82rem; font-weight:800; color:var(--rose-700);" id="rec-camg-cost">ประมาณ ฿390.00</div>
               </div>
 
-              <div style="background:white; padding:12px; border-radius:8px; border:1px solid var(--emerald-200)">
-                <div style="font-size:0.75rem; color:var(--slate-500); font-weight:700">ธาตุอาหารเสริม (Zn, B)</div>
-                <div style="font-size:1.1rem; font-weight:800; color:var(--emerald-700)" id="rec-znb">ซิงค์คีเลต 1.5 กก.</div>
-                <div style="font-size:0.75rem; color:var(--slate-600)">150 กรัม / น้ำ 200L</div>
+              <div style="background:white; padding:14px; border-radius:10px; border:1px solid var(--emerald-200); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="font-size:0.78rem; color:var(--slate-600); font-weight:700">ปุ๋ยทางใบ / ฮอร์โมน</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:var(--emerald-800); margin-top:2px;" id="rec-znb">สะสมอาหาร 0-52-34 + ซอร์บิทอล</div>
+                  <div style="font-size:0.8rem; color:var(--slate-600); margin-top:4px;" id="rec-znb-sub">อัตรา 5.0 กก. / ถัง 1,000 ลิตร</div>
+                </div>
+                <div style="margin-top:8px; padding-top:6px; border-top:1px dashed var(--slate-200); font-size:0.82rem; font-weight:800; color:var(--rose-700);" id="rec-znb-cost">ประมาณ ฿771.00</div>
+              </div>
+
+              <div style="background:white; padding:14px; border-radius:10px; border:1px solid var(--emerald-200); display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                  <div style="font-size:0.78rem; color:var(--slate-600); font-weight:700">การป้องกันโรคและแมลง</div>
+                  <div style="font-size:1.05rem; font-weight:800; color:var(--rose-700); margin-top:2px;" id="rec-pest">ป้องกันราสีชมพู & ไฟทอปธอรา</div>
+                  <div style="font-size:0.8rem; color:var(--slate-600); margin-top:4px;" id="rec-pest-sub">พ่นฟอสอีทิล-อะลูมิเนียม 1.5 กก.</div>
+                </div>
+                <div style="margin-top:8px; padding-top:6px; border-top:1px dashed var(--slate-200); font-size:0.82rem; font-weight:800; color:var(--rose-700);" id="rec-pest-cost">ประมาณ ฿650.00</div>
+              </div>
+            </div>
+
+            <!-- กล่องส่งยอดค่าใช้จ่ายเข้าสมุดบัญชี MongoDB Atlas + Google Sheet ในคลิกเดียว -->
+            <div style="background:white; border:1.5px solid var(--emerald-500); border-radius:12px; padding:16px; margin-top:16px; box-shadow:var(--shadow-sm);">
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:12px; align-items:end;">
+                <div>
+                  <label style="font-size:0.86rem; font-weight:800; color:var(--slate-800); display:block; margin-bottom:4px;">💵 ยอดค่าใช้จ่ายรวม (บาท — แก้ไขได้)</label>
+                  <input type="number" id="calc-total-cost" class="form-control" min="0" step="0.01" value="3411.00" style="font-size:1.25rem; font-weight:800; color:var(--rose-700); height:50px;" />
+                </div>
+                <div>
+                  <label style="font-size:0.86rem; font-weight:800; color:var(--slate-800); display:block; margin-bottom:4px;">📝 หมายเหตุ / ร้านค้า (ไม่บังคับ)</label>
+                  <input type="text" id="calc-note" class="form-control" style="height:50px;" placeholder="เช่น ซื้อร้านจันทบุรีการเกษตร, พ่นรอบ 1" />
+                </div>
+              </div>
+
+              <label style="display:flex; align-items:center; gap:8px; margin-top:12px; font-size:0.88rem; font-weight:700; color:var(--slate-700); cursor:pointer;">
+                <input type="checkbox" id="calc-also-save-field" checked style="width:18px; height:18px; accent-color:var(--emerald-600);" />
+                บันทึกสูตรนี้ลง "ประวัติงานแปลง" ควบคู่กับ "สมุดบัญชี" พร้อมกัน
+              </label>
+
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:10px; margin-top:14px;">
+                <button type="button" id="btn-calc-save-ledger" class="btn btn-primary" style="height:52px; font-size:1rem; width:100%;" onclick="saveCalcExpenseToLedgerAndSheet()">
+                  💰 บันทึกเข้าสมุดบัญชี & Google Sheet
+                </button>
+                <button type="button" class="btn btn-outline" style="height:52px; width:100%;" onclick="saveAgronomyRecommendation()">
+                  📋 บันทึกเฉพาะสูตรลงงานแปลง
+                </button>
               </div>
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="chart-card-header">🧪 2. คำนวณการปรับ pH น้ำพ่นยา & ปริมาตรน้ำต่อต้น (Spray Water pH & Volume Calculator)</div>
-          
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;" class="form-group">
+          <div class="chart-card-header">🧪 2. คำนวณการปรับค่า pH น้ำพ่นยา และปริมาณน้ำต่อต้น</div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;" class="form-group">
             <div>
-              <label>ค่า pH น้ำในสระสวนปัจจุบัน (Measured Water pH)</label>
-              <input type="number" id="water-ph" class="form-control" value="7.8" step="0.1" onchange="calculateSprayWater()" />
+              <label>ค่า pH น้ำในสระปัจจุบัน</label>
+              <input type="number" id="water-ph" class="form-control" value="7.8" step="0.1" oninput="calculateSprayWater()" />
             </div>
             <div>
-              <label>ปริมาตรถังพ่นยารวม (ลิตร - Liters)</label>
-              <input type="number" id="water-tank" class="form-control" value="1000" step="100" onchange="calculateSprayWater()" />
+              <label>ปริมาตรถังพ่นยารวม (ลิตร)</label>
+              <input type="number" id="water-tank" class="form-control" value="1000" step="100" oninput="calculateSprayWater()" />
             </div>
           </div>
 
-          <div id="ph-adj-result" style="padding:16px; border-radius:10px; background:var(--blue-50); border:1px solid var(--blue-200); font-size:0.88rem; color:var(--blue-900);">
-            💧 <strong>การปรับคุณภาพน้ำ</strong>: น้ำดิบมีค่า pH 7.8 (เป็นด่างสูง ยาฆ่าแมลงบางตัวจะเสื่อมฤทธิ์) <br/>
-            👉 <strong>ข้อแนะนำ</strong>: เติมสารปรับกรด-ด่าง (Water Conditioner) จำนวน <strong>300 cc</strong> เพื่อปรับ pH ให้อยู่ในช่วง <strong>5.5 - 6.5</strong> ก่อนผสมยาเคมี <br/>
-            💧 <strong>อัตราพ่นต่อต้น</strong>: ใช้น้ำพ่นเฉลี่ย <strong>10 ลิตร / ต้น</strong> (ฉีดได้ประมาณ 100 ต้น / ถัง 1,000 ลิตร)
+          <div id="ph-adj-result" style="padding:16px; border-radius:12px; background:var(--blue-50); border:1.5px solid var(--blue-200); font-size:0.92rem; color:var(--blue-800); font-weight:600;">
+            💧 <strong>การปรับคุณภาพน้ำ</strong>: ค่า pH น้ำ 7.8 (เป็นด่าง) <br/>
+            👉 แนะนำเติมสารปรับสภาพน้ำจำนวน <strong>320 ซีซี</strong> เพื่อปรับ pH ให้อยู่ในช่วง <strong>5.5 - 6.5</strong> ก่อนผสมยา <br/>
+            💧 <strong>อัตราพ่นต่อต้น</strong>: ใช้น้ำพ่นเฉลี่ย <strong>10 ลิตร/ต้น</strong> (ถัง 1,000 ลิตร พ่นได้ประมาณ 100 ต้น)
           </div>
         </div>
       </div>
     </div>
 
-    <!-- 4. FINANCIAL & ACCOUNTING DASHBOARD (DASHBOARD 2) -->
-    <div id="view-finance" class="hidden">
-      <div class="page-header">
-        <div class="page-title">
-          <h1>📊 วิเคราะห์งบการเงินและกราฟรายรับ-รายจ่าย (Financial Accounting Dashboard)</h1>
-          <p>วิเคราะห์ผลการดำเนินงาน รายได้ ต้นทุน กำไรสุทธิ และกราฟเปรียบเทียบเชิงลึก</p>
-        </div>
-        <button class="btn btn-primary btn-desktop" onclick="switchView('accounting')">
-          💰 ลงบันทึกสมุดบัญชี (Journal Voucher)
-        </button>
-      </div>
-
-      <div class="kpi-grid">
-        <div class="card" style="border-left: 5px solid var(--emerald-500);">
-          <div class="kpi-top">
-            <div>
-              <div class="kpi-label">รายได้รวม (Total Revenue)</div>
-              <div class="kpi-value" style="color:var(--emerald-600)" id="fin-rev-display">฿235,231.00</div>
-            </div>
-            <div class="kpi-icon">💰</div>
-          </div>
-          <div class="kpi-trend trend-up">▲ +20.1% <span style="color: var(--slate-400); font-weight:400">เทียบฤดูกาลก่อน</span></div>
-        </div>
-
-        <div class="card" style="border-left: 5px solid var(--blue-500);">
-          <div class="kpi-top">
-            <div>
-              <div class="kpi-label">กำไรสุทธิ (Net Profit)</div>
-              <div class="kpi-value" id="fin-net-display">฿182,911.00</div>
-            </div>
-            <div class="kpi-icon">📈</div>
-          </div>
-          <div class="kpi-trend trend-up">▲ อัตรากำไรสุทธิ <strong id="fin-margin-display">77.8%</strong></div>
-        </div>
-
-        <div class="card" style="border-left: 5px solid var(--rose-500);">
-          <div class="kpi-top">
-            <div>
-              <div class="kpi-label">ค่าใช้จ่ายรวม (Total Expenses)</div>
-              <div class="kpi-value" style="color:var(--rose-600)" id="fin-exp-display">฿52,320.00</div>
-            </div>
-            <div class="kpi-icon">💸</div>
-          </div>
-          <div class="kpi-trend trend-down">▼ -2.5% <span style="color: var(--slate-400); font-weight:400">คุมงบดีเยี่ยม</span></div>
-        </div>
-
-        <div class="card" style="border-left: 5px solid var(--purple-500);">
-          <div class="kpi-top">
-            <div>
-              <div class="kpi-label">เงินกองกลางสวนสะสม</div>
-              <div class="kpi-value" style="color:var(--purple-500)">฿50,000.00</div>
-            </div>
-            <div class="kpi-icon">🏛️</div>
-          </div>
-          <div class="kpi-trend trend-up">พร้อมสำรองฉุกเฉิน</div>
-        </div>
-      </div>
-
-      <!-- ADVANCED INTERACTIVE FINANCIAL CHARTS SECTION -->
-      <div class="charts-grid">
-        <div class="card">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
-            <div>
-              <div class="chart-card-header" style="margin-bottom:2px">📊 กราฟแนวโน้ม รายรับ VS รายจ่าย (Interactive Financial Trends)</div>
-              <p style="font-size:0.82rem; color:var(--slate-500)">คลิกที่โหนดจุดหรือแท้งเดือน เพื่อดูตัวเลขสรุปรายรับ-รายจ่ายรายเดือน</p>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <span class="chart-pill" style="color:var(--emerald-600)">● รายรับ (Revenue)</span>
-              <span class="chart-pill" style="color:var(--rose-600)">● รายจ่าย (Expense)</span>
-            </div>
-          </div>
-
-          <div class="svg-chart-container">
-            <svg width="100%" height="220" viewBox="0 0 500 200" preserveAspectRatio="none">
-              <line x1="0" y1="40" x2="500" y2="40" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="0" y1="90" x2="500" y2="90" stroke="#f1f5f9" stroke-width="1"/>
-              <line x1="0" y1="140" x2="500" y2="140" stroke="#f1f5f9" stroke-width="1"/>
-
-              <path d="M 30 150 Q 100 160, 150 140 T 270 120 T 380 70 T 470 30" fill="none" stroke="#10b981" stroke-width="4.5" stroke-linecap="round"/>
-              <path d="M 30 170 Q 100 165, 150 150 T 270 145 T 380 135 T 470 125" fill="none" stroke="#f43f5e" stroke-width="3" stroke-dasharray="6 4" stroke-linecap="round"/>
-
-              <circle cx="30" cy="150" r="7" fill="#10b981" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('ม.ค.', 12000, 4500)"/>
-              <circle cx="150" cy="140" r="7" fill="#10b981" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('มี.ค.', 28000, 9200)"/>
-              <circle cx="270" cy="120" r="7" fill="#10b981" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('พ.ค.', 45000, 14000)"/>
-              <circle cx="380" cy="70" r="7" fill="#10b981" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('มิ.ย.', 95000, 22000)"/>
-              <circle cx="470" cy="30" r="8" fill="#10b981" stroke="white" stroke-width="3" style="cursor:pointer" onclick="showChartTooltip('ก.ค. (เดือนปัจจุบัน)', 235231, 52320)"/>
-
-              <circle cx="470" cy="125" r="7" fill="#f43f5e" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('ก.ค. (รายจ่ายปัจจุบัน)', 235231, 52320)"/>
-            </svg>
-          </div>
-
-          <div style="display:flex; justify-content:space-between; color:var(--slate-400); font-size:0.8rem; font-weight:600; padding-top:10px;">
-            <span>ม.ค.</span><span>ก.พ.</span><span>มี.ค.</span><span>เม.ย.</span><span>พ.ค.</span><span>มิ.ย.</span><span>ก.ค. (ปัจจุบัน)</span>
-          </div>
-
-          <div id="chart-tooltip-box" style="margin-top:16px; padding:12px 16px; background:var(--slate-100); border-radius:10px; font-size:0.85rem; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-              <span id="tt-month" style="font-weight:800; color:var(--slate-900)">📍 ข้อมูล ก.ค. (เดือนปัจจุบัน)</span>:
-              <span id="tt-details" style="margin-left:8px; color:var(--slate-700)">รายรับ <strong>฿235,231.00</strong> | รายจ่าย <strong>฿52,320.00</strong></span>
-            </div>
-            <span id="tt-profit" style="font-weight:800; color:var(--emerald-600)">กำไรสุทธิ +฿182,911.00</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="chart-card-header" style="margin-bottom:4px">🍩 สัดส่วนค่าใช้จ่าย (Expense Drill-Down)</div>
-          <p style="font-size:0.78rem; color:var(--slate-500); margin-bottom:12px">จิ้มวงกลมหรือชื่อหมวดหมู่ เพื่อเจาะลึกดูรายการบัญชี!</p>
-
-          <div class="svg-chart-container">
-            <svg width="190" height="190" viewBox="0 0 42 42">
-              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#e2e8f0" stroke-width="5"/>
-              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#10b981" stroke-width="5" stroke-dasharray="60 40" stroke-dashoffset="25" class="pie-segment" onclick="drillDownCategory('ปุ๋ย/ยา/สารเคมี', '฿43,670.00 (60%)')"/>
-              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#f59e0b" stroke-width="5" stroke-dasharray="30 70" stroke-dashoffset="65" class="pie-segment" onclick="drillDownCategory('ค่าแรงงานเกษตร', '฿5,150.00 (30%)')"/>
-              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#3b82f6" stroke-width="5" stroke-dasharray="10 90" stroke-dashoffset="35" class="pie-segment" onclick="drillDownCategory('กองกลาง/อื่นๆ', '฿3,500.00 (10%)')"/>
-            </svg>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
-            <div class="chart-pill active" onclick="drillDownCategory('ปุ๋ย/ยา/สารเคมี', '฿43,670.00 (60%)')">
-              <span style="color:#10b981">● ปุ๋ย/ยา/สารแพคโคล (60%)</span>
-            </div>
-            <div class="chart-pill" onclick="drillDownCategory('ค่าแรงงานเกษตร', '฿5,150.00 (30%)')">
-              <span style="color:#f59e0b">● ค่าแรงงานพ่นยา/โยงลูก (30%)</span>
-            </div>
-            <div class="chart-pill" onclick="drillDownCategory('กองกลาง/อื่นๆ', '฿3,500.00 (10%)')">
-              <span style="color:#3b82f6">● น้ำมัน/กองกลาง/อุปกรณ์ (10%)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="drilldown-card" class="card hidden" style="margin-bottom:24px; border-color:var(--emerald-300); background:var(--emerald-50);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <h3 id="drill-title" style="font-size:1.05rem; font-weight:800; color:var(--emerald-800)">🔍 รายละเอียดรายการบัญชีในหมวดหมู่: ปุ๋ย/ยา/สารเคมี</h3>
-          <button class="btn btn-outline" style="height:32px; padding:0 10px; font-size:0.75rem;" onclick="document.getElementById('drilldown-card').classList.add('hidden')">✕ ปิดหน้าเจาะลึก</button>
-        </div>
-        <div class="table-container">
-          <table>
-            <thead>
-              <tr>
-                <th>วันที่</th>
-                <th>หมวดหมู่ย่อย</th>
-                <th>รายละเอียดบิล/เอกสาร</th>
-                <th>แปลงสวน</th>
-                <th style="text-align:right">จำนวนเงิน (บาท)</th>
-              </tr>
-            </thead>
-            <tbody id="drill-table-body">
-              <!-- Dynamically populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 5. FIELD LOG VIEW -->
+    <!-- =================================================================
+         4. หน้าบันทึกงานแปลง (รวมแท็บสลับไปหน้าสำรวจต้นไม้ได้ในที่เดียว)
+         ================================================================= -->
     <div id="view-field" class="hidden">
       <div class="form-container">
-        <div class="page-title" style="margin-bottom: 20px;">
-          <h1>บันทึกกิจกรรมหน้าแปลง</h1>
-          <p>เลือกแปลง วันที่ กิจกรรม ทำสารทุเรียน และคำนวณคาดการณ์การเติบโต 10 ระยะ</p>
+        <div class="page-header" style="margin-bottom:14px;">
+          <div class="page-title">
+            <h1>📋 บันทึกงานแปลงและสำรวจต้นทุเรียน</h1>
+            <p>จดบันทึกการพ่นยา ใส่ปุ๋ย ทำสารตัดหญ้า และสำรวจสุขภาพต้นทุเรียนภาคสนาม</p>
+          </div>
+        </div>
+
+        <!-- แท็บสลับระหว่าง บันทึกงานแปลง กับ สำรวจต้น -->
+        <div class="sub-nav-tabs">
+          <button type="button" class="sub-tab-btn active" onclick="switchView('field')">⚙️ บันทึกกิจกรรมแปลง</button>
+          <button type="button" class="sub-tab-btn" onclick="switchView('plant')">🌿 สำรวจสุขภาพต้น</button>
         </div>
 
         <div id="phi-banner" class="phi-banner active">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
           <div style="flex:1">
-            <h4 id="phi-title" style="font-weight:700; font-size:0.95rem">PHI Active: เหลือระยะปลอดภัยอีก 5 วัน</h4>
-            <p id="phi-desc" style="font-size:0.85rem; margin-top:4px;">ห้ามเก็บเกี่ยวจนกว่าจะครบกำหนดระยะปลอดภัย PHI เพื่อความปลอดภัยของผลผลิต</p>
-            <button class="btn btn-outline" style="height:36px; padding:0 12px; font-size:0.8rem; margin-top:10px;" onclick="togglePHI()">
-              ⚡ ทดสอบจำลอง PHI ปลอดภัย (Clear PHI)
+            <h4 id="phi-title" style="font-weight:800; font-size:0.98rem">ระยะเว้นเก็บเกี่ยวหลังพ่นยา: เหลืออีก 5 วัน</h4>
+            <p id="phi-desc" style="font-size:0.88rem; margin-top:4px; font-weight:500;">งดเก็บเกี่ยวผลผลิตจนกว่าจะครบกำหนดระยะปลอดภัยหลังพ่นสารเคมี</p>
+            <button class="btn btn-outline" style="height:38px; padding:0 14px; font-size:0.84rem; margin-top:10px;" onclick="togglePHI()">
+              ⚡ สลับสถานะระยะปลอดภัย
             </button>
           </div>
         </div>
 
         <form id="field-form" onsubmit="saveLog(event)" class="card">
           <div class="form-group">
-            <label>📅 วันที่ปฏิบัติงาน (เลือกย้อนหลังได้)</label>
-            <input type="date" id="log-date" class="form-control" onchange="calculateFlowerDates()" required />
+            <label>📅 วันที่ปฏิบัติงาน</label>
+            <div class="date-input-wrapper">
+              <input type="date" id="log-date" class="form-control" onchange="calculateFlowerDates(); updateAllThaiDateBadges();" required />
+              <span class="thai-date-badge" id="log-date-thai-badge">📅 วันนี้</span>
+            </div>
           </div>
 
           <div class="form-group">
-            <label>🌳 เลือกแปลง (Plot Selection)</label>
+            <label>🌳 เลือกแปลงสวน</label>
             <select id="log-plot" class="form-control" required>
               <option value="1) สวนหมอนทอง (บ้าน)">1) สวนหมอนทอง (บ้าน)</option>
               <option value="2) สวนกระดุม (บ้าน)">2) สวนกระดุม (บ้าน)</option>
@@ -1491,33 +640,33 @@
           </div>
 
           <div class="form-group">
-            <label>⚙️ เลือกประเภทกิจกรรม (Activity)</label>
+            <label>⚙️ ประเภทกิจกรรม</label>
             <select id="log-activity" class="form-control" onchange="onActivityChange()" required>
-              <option value="🌸 ราดสาร / ทำสารแพคโคล">🌸 ราดสาร / ทำสารแพคโคลบิวทราโซล (Flower Induction)</option>
-              <option value="🧪 พ่นยา / สารเคมี">🧪 พ่นยา / สารเคมี (Spray Mixture)</option>
-              <option value="🌿 ใส่ปุ๋ยทางดิน">🌿 ใส่ปุ๋ยทางดิน (Soil Fertilization)</option>
-              <option value="✂️ ตัดหญ้าในสวน">✂️ ตัดหญ้าในสวน (Grass Mowing)</option>
-              <option value="🌾 พ่นยาฆ่าหญ้า">🌾 พ่นยาฆ่าหญ้า (Herbicide Spray)</option>
-              <option value="🧹 เก็บกิ่งไม้ / ตกแต่งกิ่ง">🧹 เก็บกิ่งไม้ / ตกแต่งกิ่ง (Branch Clearing/Pruning)</option>
-              <option value="💧 ต่อท่อน้ำ / ซ่อมระบบน้ำ">💧 ต่อท่อน้ำ / ซ่อมระบบน้ำ (Piping Repair)</option>
-              <option value="🍈 โยงลูก / แต่งดอก / แต่งผล">🍈 โยงลูก / แต่งดอก / แต่งผล (Fruit Tying/Thinning)</option>
-              <option value="อื่นๆ (ระบุเพิ่มเติม)">🔧 กิจกรรมอื่นๆ (Specify Custom Task)</option>
+              <option value="🌸 ราดสาร / ทำสารแพคโคล">🌸 ราดสาร / ทำสารแพคโคลบิวทราโซล</option>
+              <option value="🧪 พ่นยา / สารเคมี">🧪 พ่นยา / ปุ๋ยทางใบ / ฮอร์โมน</option>
+              <option value="🌿 ใส่ปุ๋ยทางดิน">🌿 ใส่ปุ๋ยทางดิน</option>
+              <option value="✂️ ตัดหญ้าในสวน">✂️ ตัดหญ้าในสวน</option>
+              <option value="🌾 พ่นยาฆ่าหญ้า">🌾 พ่นยาฆ่าหญ้า</option>
+              <option value="🧹 เก็บกิ่งไม้ / ตกแต่งกิ่ง">🧹 เก็บกิ่งไม้ / แต่งกิ่ง</option>
+              <option value="💧 ต่อท่อน้ำ / ซ่อมระบบน้ำ">💧 ต่อท่อน้ำ / ซ่อมระบบน้ำ</option>
+              <option value="🍈 โยงลูก / แต่งดอก / แต่งผล">🍈 โยงลูก / แต่งดอก / คัดผล</option>
+              <option value="อื่นๆ (ระบุเพิ่มเติม)">🔧 กิจกรรมอื่นๆ (ระบุเอง)</option>
             </select>
 
-            <div id="custom-activity-box" class="custom-input-box hidden">
-              <input type="text" id="custom-activity-text" class="form-control" placeholder="ระบุกิจกรรมอื่นๆ เช่น ติดตั้งโซลาร์เซลล์, ล้างถังน้ำ..." />
+            <div id="custom-activity-box" class="custom-input-box hidden" style="margin-top:10px;">
+              <input type="text" id="custom-activity-text" class="form-control" placeholder="ระบุกิจกรรม เช่น ล้างถังน้ำ, ซ่อมปั๊มน้ำ..." />
             </div>
           </div>
 
-          <div id="chemical-induction-section" class="form-group" style="background:var(--emerald-50); border:1px solid var(--emerald-200); padding:16px; border-radius:var(--radius);">
-            <label style="color:var(--emerald-800); font-weight:700; display:flex; align-items:center; gap:6px;">
-              🌸 ระบบคำนวณคาดการณ์พัฒนาการทุเรียนครบ 10 ระยะ (Complete 10-Stage Durian Predictor)
+          <div id="chemical-induction-section" class="form-group" style="background:var(--emerald-50); border:1.5px solid var(--emerald-200); padding:16px; border-radius:var(--radius-lg);">
+            <label style="color:var(--emerald-800); font-weight:800;">
+              🌸 คำนวณคาดการณ์พัฒนาการทุเรียน 10 ระยะ
             </label>
-            
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:12px; margin-top:12px;">
+
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap:12px; margin-top:12px;">
               <div>
-                <label style="font-size:0.8rem; color:var(--slate-600)">👑 สายพันธุ์ทุเรียน</label>
-                <select id="induction-variety-select" class="form-control" style="height:40px; font-size:0.85rem;" onchange="syncVariety('form')">
+                <label style="font-size:0.82rem;">👑 สายพันธุ์ทุเรียน</label>
+                <select id="induction-variety-select" class="form-control" style="height:44px;" onchange="syncVariety('form')">
                   <option value="monthong" selected>หมอนทอง (120 วัน)</option>
                   <option value="kradoom">กระดุมทอง (90 วัน)</option>
                   <option value="chanee">ชะนี / พวงมณี (105 วัน)</option>
@@ -1525,104 +674,97 @@
                 </select>
               </div>
               <div>
-                <label style="font-size:0.8rem; color:var(--slate-600)">ระยะเวลาสารทำงาน</label>
-                <select id="induction-days-select" class="form-control" style="height:40px; font-size:0.85rem;" onchange="calculateFlowerDates()">
-                  <option value="30">⚡ สารออกฤทธิ์เร็ว (25-30 วัน)</option>
-                  <option value="35" selected>🌿 สารออกฤทธิ์ปกติ (30-45 วัน - มาตรฐาน)</option>
-                  <option value="45">🐢 สารออกฤทธิ์ช้า / ดินชื้น (45-60 วัน)</option>
-                </select>
-              </div>
-              <div>
-                <label style="font-size:0.8rem; color:var(--slate-600)">หรือระบุวันสารทำงาน (วัน)</label>
-                <input type="number" id="induction-custom-days" class="form-control" style="height:40px; font-size:0.85rem;" placeholder="เช่น 35" value="35" onchange="calculateFlowerDates()" />
+                <label style="font-size:0.82rem;">จำนวนวันสารออกฤทธิ์</label>
+                <input type="number" id="induction-custom-days" class="form-control" style="height:44px;" placeholder="เช่น 35" value="35" onchange="calculateFlowerDates()" />
               </div>
             </div>
 
             <div style="margin-top:16px;">
-              <div style="font-size:0.85rem; font-weight:800; color:var(--emerald-800); margin-bottom:8px;">📅 ผลการคาดการณ์พัฒนาการทุเรียนครบทั้ง 10 ระยะ:</div>
-              <div id="form-10-stage-grid" class="stage-10-grid">
-                <!-- Injected dynamically by JS -->
-              </div>
+              <div style="font-size:0.88rem; font-weight:800; color:var(--emerald-800); margin-bottom:8px;">📅 ตารางคาดการณ์พัฒนาการทั้ง 10 ระยะ:</div>
+              <div id="form-10-stage-grid" class="stage-10-grid"></div>
             </div>
           </div>
 
           <div id="spray-section" class="form-group hidden">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <label style="color:var(--emerald-700); margin-bottom:0">🧪 สูตรผสมพ่นยา (คำนวณต่อน้ำ 200 ลิตร)</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+              <label style="color:var(--emerald-800); margin-bottom:0">🧪 สูตรผสมพ่นยา (ต่อน้ำ 200 ลิตร)</label>
               <div style="display:flex; align-items:center; gap:8px;">
-                <span style="font-size:0.8rem; font-weight:600; color:var(--slate-600)">จำนวนถัง:</span>
-                <input type="number" id="tank-count" class="form-control" style="width:75px; height:36px; padding:0 8px; font-weight:700; text-align:center" value="1" min="1" />
-                <span style="font-size:0.8rem; color:var(--slate-500)">ถัง</span>
+                <span style="font-size:0.86rem; font-weight:700; color:var(--slate-700)">จำนวนถังที่พ่น:</span>
+                <input type="number" id="tank-count" class="form-control" style="width:85px; height:42px; text-align:center" value="1" min="1" />
+                <span style="font-size:0.86rem; font-weight:700; color:var(--slate-600)">ถัง</span>
               </div>
             </div>
 
-            <div class="recipe-box">
-              <div style="display:grid; grid-template-columns: 1.2fr 2fr 1fr 1fr 40px; gap:8px; margin-bottom:8px; font-size:0.75rem; font-weight:700; color:var(--slate-500); text-transform:uppercase;">
-                <span>หมวดหมู่</span>
-                <span>ชื่อยา / ปุ๋ย / สาร</span>
-                <span>ปริมาณ</span>
-                <span>หน่วย</span>
-                <span></span>
-              </div>
-              
+            <div class="itemized-box">
               <div id="spray-items-container"></div>
-
-              <button type="button" class="btn btn-outline" style="width:100%; height:40px; margin-top:8px; border-dash:2px dashed var(--emerald-500); color:var(--emerald-600); font-weight:700" onclick="addSprayItem()">
-                ➕ เพิ่มรายการยา / ปุ๋ย (Add Chemical Item)
+              <button type="button" class="btn btn-outline" style="width:100%; height:46px; margin-top:6px; border:2px dashed var(--emerald-500); color:var(--emerald-700);" onclick="addSprayItem()">
+                ➕ เพิ่มรายการยา / ปุ๋ยทางใบ
               </button>
             </div>
           </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;" class="form-group">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;" class="form-group">
             <div>
               <label>💵 ค่าแรงงาน (บาท)</label>
-              <input type="number" id="log-cost-labour" class="form-control" placeholder="0.00" value="3500" />
+              <input type="number" id="log-cost-labour" class="form-control" placeholder="0.00" value="0" />
             </div>
             <div>
-              <label>⛽ ค่าน้ำมัน/สารเคมี (บาท)</label>
+              <label>⛽ ค่าวัสดุ/สารเคมี (บาท)</label>
               <input type="number" id="log-cost-mat" class="form-control" placeholder="0.00" value="0" />
             </div>
           </div>
 
           <div class="form-group">
-            <label>เกรดผลผลิต (Crop Grade)</label>
+            <label>เกรดคุณภาพงาน / ผลผลิต</label>
             <div class="segmented-control">
-              <button type="button" class="segmented-btn active" onclick="selectGrade(this)">A</button>
-              <button type="button" class="segmented-btn" onclick="selectGrade(this)">B</button>
-              <button type="button" class="segmented-btn" onclick="selectGrade(this)">C</button>
-              <button type="button" class="segmented-btn" onclick="selectGrade(this)">D</button>
+              <button type="button" class="segmented-btn active" onclick="selectGrade(this)">เกรด A</button>
+              <button type="button" class="segmented-btn" onclick="selectGrade(this)">เกรด B</button>
+              <button type="button" class="segmented-btn" onclick="selectGrade(this)">เกรด C</button>
+              <button type="button" class="segmented-btn" onclick="selectGrade(this)">ตกเกรด</button>
             </div>
           </div>
 
           <div class="form-group">
             <label>📝 หมายเหตุ / รายละเอียดเพิ่มเติม</label>
-            <input type="text" id="log-note" class="form-control" placeholder="เช่น สภาพดินชื้นปานกลาง, งดน้ำหลังราดสาร..." />
+            <input type="text" id="log-note" class="form-control" placeholder="เช่น ดินชื้นปานกลาง, งดน้ำหลังราดสาร..." />
           </div>
 
-          <div style="margin-top:28px; display:flex; flex-direction:column; gap:12px;">
-            <button type="submit" class="btn btn-primary" style="width:100%">บันทึกข้อมูล (Save Entry)</button>
-            <button type="button" id="btn-harvest" class="btn btn-destructive" style="width:100%" disabled>ยืนยันการเก็บเกี่ยว (Confirm Harvest)</button>
+          <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+            <button type="submit" class="btn btn-primary" style="width:100%; height:52px; font-size:1.02rem;">💾 บันทึกกิจกรรมแปลง</button>
+            <button type="button" id="btn-harvest" class="btn btn-destructive" style="width:100%" disabled>ยืนยันการเก็บเกี่ยวผลผลิต</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- 6. PLANT BEHAVIOR & PHENOLOGY SURVEY VIEW -->
+    <!-- =================================================================
+         5. หน้าสำรวจอาการต้นทุเรียน
+         ================================================================= -->
     <div id="view-plant" class="hidden">
       <div class="form-container">
-        <div class="page-title" style="margin-bottom: 20px;">
-          <h1>🌿 บันทึกการสำรวจอาการต้นและฟีโนโลยี</h1>
-          <p>บันทึกระยะใบ ระยะดอก สภาพพุ่ม และอาการโรคไฟทอปธอราอย่างนักวิชาการสวนทุเรียน</p>
+        <div class="page-header" style="margin-bottom:14px;">
+          <div class="page-title">
+            <h1>🌿 บันทึกการสำรวจสุขภาพต้นทุเรียน</h1>
+            <p>บันทึกระยะใบ ระยะดอก สภาพทรงพุ่ม โรคแมลง และอาการรากเน่าโคนเน่า</p>
+          </div>
+        </div>
+
+        <div class="sub-nav-tabs">
+          <button type="button" class="sub-tab-btn" onclick="switchView('field')">⚙️ บันทึกกิจกรรมแปลง</button>
+          <button type="button" class="sub-tab-btn active" onclick="switchView('plant')">🌿 สำรวจสุขภาพต้น</button>
         </div>
 
         <form id="plant-form" onsubmit="savePlantSurvey(event)" class="card">
           <div class="form-group">
-            <label>📅 วันที่สำรวจ (Survey Date)</label>
-            <input type="date" id="plant-date" class="form-control" required />
+            <label>📅 วันที่สำรวจ</label>
+            <div class="date-input-wrapper">
+              <input type="date" id="plant-date" class="form-control" onchange="updateAllThaiDateBadges()" required />
+              <span class="thai-date-badge" id="plant-date-thai-badge">📅 วันนี้</span>
+            </div>
           </div>
 
           <div class="form-group">
-            <label>🌳 เลือกแปลงสำรวจ (Plot Selection)</label>
+            <label>🌳 เลือกแปลงที่สำรวจ</label>
             <select id="plant-plot" class="form-control" required>
               <option value="1) สวนหมอนทอง (บ้าน)">1) สวนหมอนทอง (บ้าน)</option>
               <option value="2) สวนกระดุม (บ้าน)">2) สวนกระดุม (บ้าน)</option>
@@ -1631,236 +773,437 @@
           </div>
 
           <div class="form-group">
-            <label>🌱 ระยะการเจริญเติบโตพืช (Durian Phenology Stage)</label>
+            <label>🌱 ระยะการเจริญเติบโตของต้น</label>
             <select id="plant-stage" class="form-control" onchange="checkCustomOption('plant-stage', 'custom-stage-box')" required>
-              <optgroup label="🍃 ระยะใบ (Leaf Flush Stages)">
-                <option value="🍃 ใบหางตระกวด (Spear Leaf)">🍃 ใบหางตระกวด (Spear Leaf / Lizard Tail)</option>
-                <option value="🍃 ใบอ่อนสีทอง (Copper Leaf)">🍃 ใบอ่อนสีทอง (Copper / Red Young Leaf)</option>
-                <option value="🍃 ใบเพสลาด (Maturing Soft Green Leaf)" selected>🍃 ใบเพสลาด (Maturing Soft Green Leaf)</option>
-                <option value="🍃 ใบแก่เขียวเข้ม (Fully Mature Dark Green Leaf)">🍃 ใบแก่เขียวเข้ม (Fully Mature Dark Green Leaf)</option>
-                <option value="🍃 พักยอด (Dormant Shoot Top)">🍃 พักยอด (Dormant Shoot Top)</option>
+              <optgroup label="🍃 ระยะชุดใบ">
+                <option value="🍃 ใบหางตระกวด">🍃 ใบหางตระกวด / แทงยอดอ่อน</option>
+                <option value="🍃 ใบอ่อนสีทอง">🍃 ใบอ่อนสีทอง / ใบหางปลา</option>
+                <option value="🍃 ใบเพสลาด" selected>🍃 ใบเพสลาด</option>
+                <option value="🍃 ใบแก่เขียวเข้ม">🍃 ใบแก่เขียวเข้มพร้อมสะสมอาหาร</option>
+                <option value="🍃 พักยอด">🍃 พักยอด</option>
               </optgroup>
-              <optgroup label="🌸 ระยะดอก (Flower Phenology)">
-                <option value="🌸 ระยะไข่ปลา / ตาพู (Fish Egg Bud)">🌸 ระยะไข่ปลา / ตาพู (Fish Egg Bud)</option>
-                <option value="🌸 ระยะเหง้าเฮ้ง / หัวกำไล (Knob Bud)">🌸 ระยะเหง้าเฮ้ง / หัวกำไล (Knob Bud)</option>
-                <option value="🌸 ระยะมะเขือพวง (Cluster Bud)">🌸 ระยะมะเขือพวง (Cluster Bud / Pea Stage)</option>
-                <option value="🌸 ระยะหัวฉีด (Spear Bud)">🌸 ระยะหัวฉีด (Spear Bud)</option>
-                <option value="🌸 ระยะบาน (Anthesis / Full Bloom)">🌸 ระยะบาน (Full Bloom)</option>
+              <optgroup label="🌸 ระยะดอก">
+                <option value="🌸 ระยะไข่ปลา / ตาพู">🌸 ระยะไข่ปลา / ตาพู</option>
+                <option value="🌸 ระยะเหง้าเฮ้ง / หัวกำไล">🌸 ระยะเหง้าเฮ้ง / หัวกำไล</option>
+                <option value="🌸 ระยะมะเขือพวง">🌸 ระยะมะเขือพวง</option>
+                <option value="🌸 ระยะหัวฉีด">🌸 ระยะหัวฉีด</option>
+                <option value="🌸 ระยะดอกบาน">🌸 ระยะดอกบาน</option>
               </optgroup>
-              <optgroup label="🍈 ระยะติดผล (Fruit Growth Stages)">
-                <option value="🍈 หางแย้ถอดหมวก (Fruitlet Shedding)">🍈 หางแย้ถอดหมวก (Fruitlet Shedding)</option>
-                <option value="🍈 ระยะกระปุก (Small Fruit 30-45 วัน)">🍈 ระยะกระปุก (Small Fruit 30-45 วัน)</option>
-                <option value="🍈 ขยายพู / สร้างเนื้อ (Fruit Expansion 60-90 วัน)">🍈 ขยายพู / สร้างเนื้อ (Fruit Expansion 60-90 วัน)</option>
-                <option value="🍈 ผลแก่พร้อมเก็บเกี่ยว (Harvest Maturity)">🍈 ผลแก่พร้อมเก็บเกี่ยว (Harvest Maturity)</option>
+              <optgroup label="🍈 ระยะติดผล">
+                <option value="🍈 หางแย้ถอดหมวก">🍈 หางแย้ถอดหมวก</option>
+                <option value="🍈 ระยะกระปุก (30-45 วัน)">🍈 ระยะกระปุก (30-45 วัน)</option>
+                <option value="🍈 ขยายพู / สร้างเนื้อ (60-90 วัน)">🍈 ขยายพู / สร้างเนื้อ (60-90 วัน)</option>
+                <option value="🍈 ผลแก่พร้อมเก็บเกี่ยว">🍈 ผลแก่พร้อมเก็บเกี่ยว</option>
               </optgroup>
-              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ ระยะอื่นๆ (ระบุเพิ่มเติม)</option>
+              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ ระยะอื่นๆ (ระบุเอง)</option>
             </select>
-            <div id="custom-stage-box" class="custom-input-box hidden">
-              <input type="text" id="custom-stage-text" class="form-control" placeholder="ระบุระยะพัฒนาการอื่นๆ..." />
+            <div id="custom-stage-box" class="custom-input-box hidden" style="margin-top:10px;">
+              <input type="text" id="custom-stage-text" class="form-control" placeholder="ระบุระยะพัฒนาการ..." />
             </div>
           </div>
 
           <div class="form-group">
-            <label>🍃 สภาพใบและทรงพุ่ม (Leaf & Canopy Health)</label>
+            <label>🍃 สภาพใบและทรงพุ่ม</label>
             <select id="plant-leaf-condition" class="form-control" onchange="checkCustomOption('plant-leaf-condition', 'custom-leaf-box')" required>
-              <option value="เขียวเข้มมันเงา (ปกติสมบูรณ์)">เขียวเข้มมันเงา (ปกติสมบูรณ์)</option>
-              <option value="เขียวซีด / ขาดธาตุอาหาร">เขียวซีด / ขาดธาตุอาหาร (Chlorotic/Nutrient Deficient)</option>
-              <option value="ขอบใบไหม้ / ใบติดส้ม">ขอบใบไหม้ / ใบติดส้ม (Tip Burn / Scorch)</option>
-              <option value="ใบร่วงพุ่มโทรม (>30% Defoliation)">ใบร่วงพุ่มโทรม (>30% Defoliation)</option>
-              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ สภาพใบอื่นๆ (ระบุเพิ่มเติม)</option>
+              <option value="เขียวเข้มมันเงา สมบูรณ์ดี">เขียวเข้มมันเงา สมบูรณ์ดี</option>
+              <option value="ใบเขียวซีด ขาดธาตุอาหาร">ใบเขียวซีด ขาดธาตุอาหาร</option>
+              <option value="ขอบใบไหม้ / ใบติดส้ม">ขอบใบไหม้ / ใบติดส้ม</option>
+              <option value="ใบร่วงพุ่มโทรม">ใบร่วงพุ่มโทรม</option>
+              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ สภาพใบอื่นๆ (ระบุเอง)</option>
             </select>
-            <div id="custom-leaf-box" class="custom-input-box hidden">
-              <input type="text" id="custom-leaf-text" class="form-control" placeholder="ระบุสภาพใบอื่นๆ..." />
+            <div id="custom-leaf-box" class="custom-input-box hidden" style="margin-top:10px;">
+              <input type="text" id="custom-leaf-text" class="form-control" placeholder="ระบุสภาพใบ..." />
             </div>
           </div>
 
           <div class="form-group">
-            <label>🐛 ศัตรูพืชและโรคทางใบที่พบ (Pest & Disease Observation)</label>
+            <label>🐛 ศัตรูพืชและโรคทางใบที่พบ</label>
             <select id="plant-pest" class="form-control" onchange="checkCustomOption('plant-pest', 'custom-pest-box')" required>
-              <option value="ไม่พบศัตรูพืชระบาด (Clean Canopy)">ไม่พบศัตรูพืชระบาด (Clean Canopy)</option>
-              <option value="พบเพลี้ยไก่แจ้ประปราย">พบเพลี้ยไก่แจ้ประปราย (Durian Psyllid)</option>
-              <option value="พบเพลี้ยไฟกินยอด/ดอก">พบเพลี้ยไฟกินยอด/ดอก (Thrips Damage)</option>
-              <option value="พบโรคใบติด (Rhizoctonia Web Blight)">พบโรคใบติด (Rhizoctonia Web Blight)</option>
-              <option value="พบโรคราแป้ง / ราดำ">พบโรคราแป้ง / ราดำ (Sooty Mold)</option>
-              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ โรค/ศัตรูพืชอื่นๆ (ระบุเพิ่มเติม)</option>
+              <option value="ไม่พบศัตรูพืชระบาด">ไม่พบศัตรูพืชระบาด</option>
+              <option value="พบเพลี้ยไก่แจ้">พบเพลี้ยไก่แจ้</option>
+              <option value="พบเพลี้ยไฟกินยอด/ดอก">พบเพลี้ยไฟกินยอด/ดอก</option>
+              <option value="พบไรแดง">พบไรแดง</option>
+              <option value="พบโรคใบติด / แอนแทรคโนส">พบโรคใบติด / แอนแทรคโนส</option>
+              <option value="พบโรคราแป้ง / ราดำ">พบโรคราแป้ง / ราดำ</option>
+              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ โรคหรือแมลงอื่นๆ (ระบุเอง)</option>
             </select>
-            <div id="custom-pest-box" class="custom-input-box hidden">
-              <input type="text" id="custom-pest-text" class="form-control" placeholder="ระบุโรคหรือแมลงอื่นๆ ที่พบ..." />
+            <div id="custom-pest-box" class="custom-input-box hidden" style="margin-top:10px;">
+              <input type="text" id="custom-pest-text" class="form-control" placeholder="ระบุโรคหรือแมลงที่พบ..." />
             </div>
           </div>
 
           <div class="form-group">
-            <label>🪵 สภาพลำต้นและโรคไฟทอปธอรา (Trunk & Phytophthora Health)</label>
+            <label>🪵 สภาพลำต้นและโรครากเน่าโคนเน่า</label>
             <select id="plant-trunk" class="form-control" onchange="checkCustomOption('plant-trunk', 'custom-trunk-box')" required>
-              <option value="ลำต้นปกติ ไร้แผล (Clean Trunk)">ลำต้นปกติ ไร้แผล (Clean Trunk)</option>
-              <option value="พบแผลเยิ้มรากเน่าโคนเน่า (Phytophthora Gummosis Active)">พบแผลเยิ้มรากเน่าโคนเน่า (Phytophthora Active)</option>
-              <option value="แผลไฟทอปแห้งกำลังสมาน (Healing Canker)">แผลไฟทอปแห้งกำลังสมาน (Healing Canker)</option>
-              <option value="มอดเจาะลำต้น (Stem Borer Beetle)">มอดเจาะลำต้น (Stem Borer Beetle)</option>
-              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ สภาพลำต้นอื่นๆ (ระบุเพิ่มเติม)</option>
+              <option value="ลำต้นปกติ ไร้แผลเน่า">ลำต้นปกติ ไร้แผลเน่า</option>
+              <option value="พบแผลน้ำเยิ้มไฟทอปธอรา">พบแผลน้ำเยิ้มไฟทอปธอรา</option>
+              <option value="แผลไฟทอปธอราแห้งสมานดีแล้ว">แผลไฟทอปธอราแห้งสมานดีแล้ว</option>
+              <option value="พบมอดเจาะลำต้น">พบมอดเจาะลำต้น</option>
+              <option value="อื่นๆ (ระบุเพิ่มเติม)">❓ อาการลำต้นอื่นๆ (ระบุเอง)</option>
             </select>
-            <div id="custom-trunk-box" class="custom-input-box hidden">
-              <input type="text" id="custom-trunk-text" class="form-control" placeholder="ระบุอาการลำต้นอื่นๆ..." />
+            <div id="custom-trunk-box" class="custom-input-box hidden" style="margin-top:10px;">
+              <input type="text" id="custom-trunk-text" class="form-control" placeholder="ระบุอาการลำต้น..." />
             </div>
           </div>
 
           <div class="form-group">
-            <label>⭐ คะแนนความสมบูรณ์ต้นโดยรวม (Tree Vigour Rating)</label>
+            <label>⭐ คะแนนความสมบูรณ์ต้นโดยรวม</label>
             <div class="segmented-control">
               <button type="button" class="segmented-btn" onclick="selectVigour(this, 1)">1★ โทรม</button>
-              <button type="button" class="segmented-btn" onclick="selectVigour(this, 2)">2★ ปานกลาง</button>
+              <button type="button" class="segmented-btn" onclick="selectVigour(this, 2)">2★ พอใช้</button>
               <button type="button" class="segmented-btn" onclick="selectVigour(this, 3)">3★ ดี</button>
               <button type="button" class="segmented-btn active" onclick="selectVigour(this, 4)">4★ ดีมาก</button>
-              <button type="button" class="segmented-btn" onclick="selectVigour(this, 5)">5★ สมบูรณ์พรีเมียม</button>
+              <button type="button" class="segmented-btn" onclick="selectVigour(this, 5)">5★ ดีเยี่ยม</button>
             </div>
           </div>
 
           <div class="form-group">
-            <label>💬 บันทึกอาการเพิ่มเติมอื่นๆ (Custom Symptom Observation)</label>
-            <input type="text" id="plant-custom-notes" class="form-control" placeholder="เช่น สังเกตพบต้นมุมทิศใต้เริ่มผลัดใบ, รากฝอยแตกใหม่ดี..." />
+            <label>💬 บันทึกอาการเพิ่มเติม</label>
+            <input type="text" id="plant-custom-notes" class="form-control" placeholder="เช่น ต้นโซนทิศใต้เริ่มแตกยอดอ่อน, รากฝอยเดินดี..." />
           </div>
 
           <div class="form-group">
-            <label>📝 ข้อเสนอแนะการดูแลตามหลักวิชาการ (Agronomist Recommendation)</label>
-            <input type="text" id="plant-recommendation" class="form-control" placeholder="เช่น ยอดหางตระกวด ควรฉีดเพลี้ยไก่แจ้ + เสริมแมกนีเซียมสังกะสี" value="ฉีดป้องกันเพลี้ยไก่แจ้ + พ่นซิงค์คีเลตบำรุงใบเพสลาด" />
+            <label>📝 แนวทางการดูแลรักษา</label>
+            <input type="text" id="plant-recommendation" class="form-control" placeholder="เช่น พ่นป้องกันเพลี้ยไก่แจ้ + เสริมซิงค์และแมกนีเซียม" value="ฉีดป้องกันเพลี้ยไก่แจ้ + พ่นซิงค์คีเลตบำรุงใบเพสลาด" />
           </div>
 
-          <div style="margin-top:28px;">
-            <button type="submit" class="btn btn-primary" style="width:100%">บันทึกผลการสำรวจต้น (Save Survey Log)</button>
+          <div style="margin-top:24px;">
+            <button type="submit" class="btn btn-primary" style="width:100%; height:52px; font-size:1.02rem;">💾 บันทึกผลการสำรวจต้น</button>
           </div>
         </form>
       </div>
     </div>
 
-    <!-- 7. ACCOUNTING & FINANCIAL LEDGER VIEW -->
+    <!-- =================================================================
+         6. หน้าสมุดบัญชีและการเงิน (Agri-Ledger ใหม่ กว้าง กดง่าย พร้อมตัวกรอง)
+         ================================================================= -->
     <div id="view-accounting" class="hidden">
-      <div class="page-header">
+      <div class="page-header" style="margin-bottom:16px;">
         <div class="page-title">
-          <h1>💰 สมุดบัญชีรายรับ-รายจ่ายทางการเกษตร (Agri-Ledger Journal)</h1>
-          <p>บันทึกและวิเคราะห์งบการเงินแยกตามแปลง สารเคมี ปุ๋ย ค่าแรง บัญชีกองกลางสวน และขายผลผลิต</p>
+          <h1>💰 สมุดบัญชีรายรับ-รายจ่ายสวนทุเรียน</h1>
+          <p>บันทึกรายรับ-รายจ่าย ค่าปุ๋ย ค่ายา ค่าแรง และตรวจสอบสรุปยอดเงินแยกตามเดือนและแปลงสวน</p>
+        </div>
+        <div class="sub-nav-tabs" style="margin-bottom:0;">
+          <button type="button" class="sub-tab-btn active" onclick="switchView('accounting')">🧾 สมุดบัญชีรายวัน</button>
+          <button type="button" class="sub-tab-btn" onclick="switchView('finance')">📊 กราฟวิเคราะห์การเงิน</button>
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1.1fr 1.9fr; gap:24px;">
-        <form id="acc-form" onsubmit="saveAccEntry(event)" class="card" style="height:fit-content;">
-          <div class="chart-card-header">🧾 บันทึกรายการบัญชี (Journal Voucher)</div>
-
-          <div class="form-group">
-            <label>ประเภทรายการ (Entry Type)</label>
-            <div class="segmented-control">
-              <button type="button" id="type-inc-btn" class="segmented-btn active" style="color:var(--emerald-700)" onclick="setAccType('income')">🟢 รายรับ (Income)</button>
-              <button type="button" id="type-exp-btn" class="segmented-btn" style="color:var(--rose-700)" onclick="setAccType('expense')">🔴 รายจ่าย (Expense)</button>
-            </div>
+      <!-- แถบตัวกรองเลือกดูตาม "เดือน" และ "แปลงสวน" -->
+      <div class="ledger-filter-bar">
+        <div class="filter-controls-group">
+          <div class="filter-item">
+            <label>📅 เลือกเดือน:</label>
+            <select id="acc-filter-month" class="form-control" style="height:44px;" onchange="renderAccEntries()">
+              <option value="all">ทุกเดือนทั้งหมด</option>
+              <option value="01">มกราคม</option>
+              <option value="02">กุมภาพันธ์</option>
+              <option value="03">มีนาคม</option>
+              <option value="04">เมษายน</option>
+              <option value="05">พฤษภาคม</option>
+              <option value="06">มิถุนายน</option>
+              <option value="07">กรกฎาคม</option>
+              <option value="08">สิงหาคม</option>
+              <option value="09">กันยายน</option>
+              <option value="10">ตุลาคม</option>
+              <option value="11">พฤศจิกายน</option>
+              <option value="12">ธันวาคม</option>
+            </select>
           </div>
-
-          <div class="form-group">
-            <label>📅 วันที่รายการ (Transaction Date)</label>
-            <input type="date" id="acc-date" class="form-control" required />
-          </div>
-
-          <div class="form-group">
-            <label>🌳 แปลงสวน / บัญชีเป้าหมาย (Plot Allocation)</label>
-            <select id="acc-plot" class="form-control" required>
-              <option value="🏛️ บัญชีกองกลางสวน / กงสี">🏛️ บัญชีกองกลางสวน / กงสี (Central Orchard Fund)</option>
+          <div class="filter-item">
+            <label>🌳 เลือกแปลงสวน:</label>
+            <select id="acc-filter-plot" class="form-control" style="height:44px;" onchange="renderAccEntries()">
+              <option value="all">ทุกแปลงสวนทั้งหมด</option>
+              <option value="🏛️ บัญชีกองกลางสวน / กงสี">🏛️ บัญชีกองกลางสวน / กงสี</option>
               <option value="1) สวนหมอนทอง (บ้าน)">1) สวนหมอนทอง (บ้าน)</option>
               <option value="2) สวนกระดุม (บ้าน)">2) สวนกระดุม (บ้าน)</option>
               <option value="3) สวนมังคุด (กงษีไร่)">3) สวนมังคุด (กงษีไร่)</option>
-              <option value="รวมทุกแปลง (Central Orchard)">รวมทุกแปลง (Central Orchard)</option>
+              <option value="รวมทุกแปลง">รวมทุกแปลง</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" class="btn btn-outline" style="height:44px;" onclick="resetAccFilters()">🔄 แสดงทั้งหมด</button>
+      </div>
+
+      <!-- การ์ดสรุปยอดเงิน 3 ใบ ด้านบนสุด (รายรับรวม, รายจ่ายรวม, ยอดสุทธิ) -->
+      <div class="kpi-grid-3">
+        <div class="card" style="border-left: 6px solid var(--emerald-500); background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);">
+          <div class="kpi-top">
+            <div>
+              <div class="kpi-label">🟢 รายรับรวม</div>
+              <div class="kpi-value" style="color:var(--emerald-700)" id="acc-top-inc">฿0.00</div>
+            </div>
+            <div class="kpi-icon" style="background:var(--emerald-100); color:var(--emerald-700);">💵</div>
+          </div>
+          <div class="kpi-trend trend-up" id="acc-top-inc-count">ตามตัวกรองที่เลือก</div>
+        </div>
+
+        <div class="card" style="border-left: 6px solid var(--rose-500); background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);">
+          <div class="kpi-top">
+            <div>
+              <div class="kpi-label">🔴 รายจ่ายรวม</div>
+              <div class="kpi-value" style="color:var(--rose-700)" id="acc-top-exp">฿0.00</div>
+            </div>
+            <div class="kpi-icon" style="background:var(--rose-100); color:var(--rose-700);">🧾</div>
+          </div>
+          <div class="kpi-trend trend-down" id="acc-top-exp-count">ค่าปุ๋ย ยา แรงงาน และวัสดุ</div>
+        </div>
+
+        <div class="card" style="border-left: 6px solid var(--blue-600); background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);">
+          <div class="kpi-top">
+            <div>
+              <div class="kpi-label">💎 ยอดสุทธิ (รายรับ - รายจ่าย)</div>
+              <div class="kpi-value" style="color:var(--blue-700)" id="acc-top-net">฿0.00</div>
+            </div>
+            <div class="kpi-icon" style="background:var(--blue-100); color:var(--blue-700);">📊</div>
+          </div>
+          <div class="kpi-trend" id="acc-top-margin" style="color:var(--blue-800)">สัดส่วนกำไรสุทธิ 0.0%</div>
+        </div>
+      </div>
+
+      <!-- โครงสร้างหน้าสมุดบัญชี 2 คอลัมน์กว้างพิเศษ -->
+      <div class="accounting-layout-grid">
+        <!-- ฟอร์มบันทึกรายการ -->
+        <form id="acc-form" onsubmit="saveAccEntry(event)" class="card">
+          <div class="chart-card-header">🧾 บันทึกรายการรับ-จ่ายใหม่</div>
+
+          <div class="form-group">
+            <label>ประเภทรายการ</label>
+            <div class="segmented-control">
+              <button type="button" id="type-inc-btn" class="segmented-btn active" style="color:var(--emerald-700)" onclick="setAccType('income')">🟢 รายรับ</button>
+              <button type="button" id="type-exp-btn" class="segmented-btn" style="color:var(--rose-700)" onclick="setAccType('expense')">🔴 รายจ่าย</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>📅 วันที่รายการ</label>
+            <div class="date-input-wrapper">
+              <input type="date" id="acc-date" class="form-control" onchange="updateAllThaiDateBadges()" required />
+              <span class="thai-date-badge" id="acc-date-thai-badge">📅 วันนี้</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>🌳 แปลงสวน</label>
+            <select id="acc-plot" class="form-control" required>
+              <option value="🏛️ บัญชีกองกลางสวน / กงสี">🏛️ บัญชีกองกลางสวน / กงสี</option>
+              <option value="1) สวนหมอนทอง (บ้าน)">1) สวนหมอนทอง (บ้าน)</option>
+              <option value="2) สวนกระดุม (บ้าน)">2) สวนกระดุม (บ้าน)</option>
+              <option value="3) สวนมังคุด (กงษีไร่)">3) สวนมังคุด (กงษีไร่)</option>
+              <option value="รวมทุกแปลง">รวมทุกแปลง</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label>หมวดหมู่บัญชี (Account Category)</label>
-            <select id="acc-category" class="form-control" required>
-              <option value="🏛️ เงินสะสม / บัญชีกองกลางสวน (Central Reserve Fund)">🏛️ เงินสะสม / บัญชีกองกลางสวน (Central Reserve Fund)</option>
-              <option value="🟢 ขายผลผลิตทุเรียนตัดสด (เหมาสวน / ล้ง)">🟢 ขายผลผลิตทุเรียนตัดสด (เหมาสวน / ล้ง)</option>
-              <option value="🟢 ขายผลผลิตทุเรียนคัดเกรด (เกรด A, B, C)">🟢 ขายผลผลิตทุเรียนคัดเกรด (เกรด A, B, C)</option>
-              <option value="🟢 ขายผลผลิตทุเรียนแปรรูป / ตกเกรด">🟢 ขายผลผลิตทุเรียนแปรรูป / ตกเกรด</option>
-              <option value="🟢 ขายผลผลิตพืชร่วม (มังคุด / เงาะ / ลองกอง)">🟢 ขายผลผลิตพืชร่วม (มังคุด / เงาะ / ลองกอง)</option>
-              <option value="🟢 เงินอุดหนุนเกษตร / รายรับอื่น">🟢 เงินอุดหนุนเกษตร / รายรับอื่น</option>
-            </select>
+            <label>หมวดหมู่รายการ</label>
+            <select id="acc-category" class="form-control" required></select>
           </div>
 
-          <div id="expense-itemized-section" class="form-group" style="background:var(--slate-50); border:1px solid var(--slate-200); padding:16px; border-radius:var(--radius);">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <label style="color:var(--rose-700); font-weight:700; margin-bottom:0">📦 ตารางระบุรายการซื้อสินค้า/อุปกรณ์/ยา (Itemized Purchases)</label>
-            </div>
-            
-            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr 34px; gap:6px; margin-bottom:8px; font-size:0.7rem; font-weight:700; color:var(--slate-500); text-transform:uppercase;">
-              <span>ชื่อสินค้า/วัสดุ</span>
-              <span>จำนวน</span>
-              <span>หน่วย</span>
-              <span>ราคา/หน่วย</span>
-              <span></span>
+          <!-- ตารางระบุรายการซื้อสินค้า/ปุ๋ย/ยา (กว้าง กดง่าย มีระบบแนะนำชื่ออัตโนมัติ) -->
+          <div id="expense-itemized-section" class="form-group itemized-box hidden">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:6px;">
+              <label style="color:var(--rose-800); font-weight:800; font-size:0.96rem; margin-bottom:0">📦 รายการซื้อสินค้า / ปุ๋ย / ยา / อุปกรณ์</label>
+              <span style="font-size:0.78rem; color:var(--slate-600); font-weight:600;">มีระบบแนะนำชื่อปุ๋ย/ยาอัตโนมัติ</span>
             </div>
 
             <div id="purchase-items-container"></div>
 
-            <button type="button" class="btn btn-outline" style="width:100%; height:36px; margin-top:8px; border-dash:2px dashed var(--rose-400); color:var(--rose-600); font-weight:700; font-size:0.85rem;" onclick="addPurchaseItem()">
-              ➕ เพิ่มรายการซื้อสินค้า/ยา/อุปกรณ์ (Add Item)
+            <button type="button" class="btn btn-outline" style="width:100%; height:48px; margin-top:6px; border:2px dashed var(--rose-400); color:var(--rose-700); font-size:0.94rem;" onclick="addPurchaseItem()">
+              ➕ เพิ่มรายการสินค้า / ปุ๋ย / ยา
             </button>
           </div>
 
           <div class="form-group">
-            <label>💵 ยอดรวมจำนวนเงิน (คำนวณอัตโนมัติ - บาท)</label>
-            <input type="number" id="acc-amount" class="form-control" placeholder="0.00" step="0.01" style="font-weight:800; font-size:1.1rem; color:var(--rose-600)" required />
+            <label>💵 ยอดรวมจำนวนเงิน (บาท)</label>
+            <input type="number" id="acc-amount" class="form-control" placeholder="0.00" step="0.01" style="font-weight:800; font-size:1.25rem; height:52px; color:var(--slate-900)" required />
           </div>
 
           <div class="form-group">
-            <label>📝 รายละเอียด / ร้านค้า / เลขที่บิลอ้างอิง</label>
-            <input type="text" id="acc-desc" class="form-control" placeholder="เช่น บิลซื้อร้านจันทบุรีการเกษตร #INV-889" required />
+            <label>📝 รายละเอียดเพิ่มเติม / ชื่อร้านค้า / เลขบิล</label>
+            <input type="text" id="acc-desc" class="form-control" placeholder="เช่น ร้านจันทบุรีการเกษตร, ค่าแรงคนงาน 4 คน..." />
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width:100%; margin-top:12px;">ลงบันทึกสมุดบัญชี (Post Voucher)</button>
+          <button type="submit" class="btn btn-primary" style="width:100%; height:52px; font-size:1.05rem; margin-top:8px;">💾 บันทึกรายการ</button>
         </form>
 
+        <!-- ตารางประวัติรายรับ-รายจ่าย -->
         <div class="card">
-          <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center;">
-            <span>📖 สมุดรายวันทั่วไป (General Ledger Journal)</span>
-            <button class="btn btn-outline" style="height:36px; padding:0 12px; font-size:0.8rem;" onclick="exportAccCSV()">📥 ส่งออกรายงาน CSV</button>
+          <div class="chart-card-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <span>📖 ประวัติรายรับ-รายจ่าย</span>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="btn btn-outline" style="height:40px; padding:0 14px; font-size:0.86rem; border-color:var(--emerald-500); color:var(--emerald-800);" onclick="openSheetsModal()">📊 Google Sheet สำรอง</button>
+              <button type="button" class="btn btn-outline" style="height:40px; padding:0 14px; font-size:0.86rem;" onclick="exportAccCSV()">📥 ส่งออกไฟล์ CSV</button>
+            </div>
           </div>
 
           <div class="table-container">
             <table class="table-responsive-card">
               <thead>
-
                 <tr>
-                  <th>วันที่</th>
+                  <th>วันที่ (วว/ดด/ปปปป)</th>
                   <th>ประเภท</th>
-                  <th>หมวดหมู่บัญชี</th>
-                  <th>รายละเอียด / รายการซื้อสินค้า</th>
-                  <th style="text-align:right">จำนวนเงิน (บาท)</th>
+                  <th>แปลงสวน & หมวดหมู่</th>
+                  <th>รายละเอียด / รายการสินค้า</th>
+                  <th style="text-align:right">จำนวนเงิน</th>
+                  <th style="text-align:center">จัดการ</th>
                 </tr>
               </thead>
-              <tbody id="acc-table-body">
-                <tr>
-                  <td>2026-07-24</td>
-                  <td><span class="badge-expense">🔴 รายจ่าย</span></td>
-                  <td style="font-weight:700">🔴 สารเคมีเกษตร / สารแพคโคล / ยาพ่น</td>
-                  <td style="font-size:0.82rem; color:var(--slate-600)">ท่อ PE (10 อัน @5B) + ไทอะมีทอกแซม (1 ลัง @2,500B) + อะบาเมกติน (2 ขวด @350B) + น้ำตาลซอร์บิทอล (4 แกลลอน @480B) | 1) สวนหมอนทอง</td>
-                  <td style="text-align:right; font-weight:800; color:var(--rose-600)">-฿5,170.00</td>
-                </tr>
-                <tr>
-                  <td>2026-07-24</td>
-                  <td><span class="badge-income">🟢 รายรับ</span></td>
-                  <td style="font-weight:700">🏛️ เงินสะสม / บัญชีกองกลางสวน</td>
-                  <td style="font-size:0.82rem; color:var(--slate-600)">โอนปันผลเข้าบัญชีกองกลางสวน | 🏛️ บัญชีกองกลางสวน / กงสี</td>
-                  <td style="text-align:right; font-weight:800; color:var(--emerald-600)">+฿50,000.00</td>
-                </tr>
-              </tbody>
+              <tbody id="acc-table-body"></tbody>
             </table>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- =================================================================
+         7. หน้ากราฟวิเคราะห์งบการเงิน (เชื่อมต่อในหมวดสมุดบัญชี & การเงิน)
+         ================================================================= -->
+    <div id="view-finance" class="hidden">
+      <div class="page-header" style="margin-bottom:16px;">
+        <div class="page-title">
+          <h1>📊 วิเคราะห์งบการเงินและกราฟรายรับ-รายจ่าย</h1>
+          <p>วิเคราะห์ผลการดำเนินงาน รายได้ ต้นทุน กำไรสุทธิ และสัดส่วนค่าใช้จ่ายในสวน</p>
+        </div>
+        <div class="sub-nav-tabs" style="margin-bottom:0;">
+          <button type="button" class="sub-tab-btn" onclick="switchView('accounting')">🧾 สมุดบัญชีรายวัน</button>
+          <button type="button" class="sub-tab-btn active" onclick="switchView('finance')">📊 กราฟวิเคราะห์การเงิน</button>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="card" style="border-left: 5px solid var(--emerald-500);">
+          <div class="kpi-top">
+            <div>
+              <div class="kpi-label">รายรับรวมทั้งหมด</div>
+              <div class="kpi-value" style="color:var(--emerald-700)" id="fin-rev-display">฿0.00</div>
+            </div>
+            <div class="kpi-icon">💰</div>
+          </div>
+          <div class="kpi-trend trend-up">▲ รายได้จากการขายผลผลิตและกองกลาง</div>
+        </div>
+
+        <div class="card" style="border-left: 5px solid var(--rose-500);">
+          <div class="kpi-top">
+            <div>
+              <div class="kpi-label">รายจ่ายรวมทั้งหมด</div>
+              <div class="kpi-value" style="color:var(--rose-700)" id="fin-exp-display">฿0.00</div>
+            </div>
+            <div class="kpi-icon">💸</div>
+          </div>
+          <div class="kpi-trend trend-down">▼ ต้นทุนปุ๋ย ยา ค่าแรง และระบบน้ำ</div>
+        </div>
+
+        <div class="card" style="border-left: 5px solid var(--blue-500);">
+          <div class="kpi-top">
+            <div>
+              <div class="kpi-label">กำไรสุทธิ</div>
+              <div class="kpi-value" style="color:var(--blue-700)" id="fin-net-display">฿0.00</div>
+            </div>
+            <div class="kpi-icon">📈</div>
+          </div>
+          <div class="kpi-trend trend-up">▲ อัตรากำไรสุทธิ <strong id="fin-margin-display">0.0%</strong></div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+            <div>
+              <div class="chart-card-header" style="margin-bottom:2px">📊 กราฟแนวโน้ม รายรับ เทียบกับ รายจ่าย</div>
+              <p style="font-size:0.85rem; color:var(--slate-600)">แตะที่จุดบนกราฟเพื่อดูสรุปยอดรายเดือน</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span class="chart-pill" style="color:var(--emerald-700)">● รายรับ</span>
+              <span class="chart-pill" style="color:var(--rose-700)">● รายจ่าย</span>
+            </div>
+          </div>
+
+          <div class="svg-chart-container">
+            <svg width="100%" height="220" viewBox="0 0 500 200" preserveAspectRatio="none">
+              <line x1="0" y1="40" x2="500" y2="40" stroke="#e2e8f0" stroke-width="1"/>
+              <line x1="0" y1="90" x2="500" y2="90" stroke="#e2e8f0" stroke-width="1"/>
+              <line x1="0" y1="140" x2="500" y2="140" stroke="#e2e8f0" stroke-width="1"/>
+
+              <path d="M 30 150 Q 100 160, 150 140 T 270 120 T 380 70 T 470 30" fill="none" stroke="#059669" stroke-width="4.5" stroke-linecap="round"/>
+              <path d="M 30 170 Q 100 165, 150 150 T 270 145 T 380 135 T 470 125" fill="none" stroke="#e11d48" stroke-width="3.5" stroke-dasharray="6 4" stroke-linecap="round"/>
+
+              <circle cx="30" cy="150" r="7" fill="#059669" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('ม.ค.', 12000, 4500)"/>
+              <circle cx="150" cy="140" r="7" fill="#059669" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('มี.ค.', 28000, 9200)"/>
+              <circle cx="270" cy="120" r="7" fill="#059669" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('พ.ค.', 45000, 14000)"/>
+              <circle cx="380" cy="70" r="7" fill="#059669" stroke="white" stroke-width="2.5" style="cursor:pointer" onclick="showChartTooltip('มิ.ย.', 95000, 22000)"/>
+              <circle cx="470" cy="30" r="8" fill="#059669" stroke="white" stroke-width="3" style="cursor:pointer" onclick="showChartTooltip('เดือนปัจจุบัน', 235231, 52320)"/>
+            </svg>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; color:var(--slate-600); font-size:0.82rem; font-weight:700; padding-top:10px;">
+            <span>ม.ค.</span><span>ก.พ.</span><span>มี.ค.</span><span>เม.ย.</span><span>พ.ค.</span><span>มิ.ย.</span><span>ปัจจุบัน</span>
+          </div>
+
+          <div id="chart-tooltip-box" style="margin-top:16px; padding:12px 16px; background:var(--slate-100); border-radius:10px; font-size:0.88rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <span id="tt-month" style="font-weight:800; color:var(--slate-900)">📍 ข้อมูลเดือนปัจจุบัน</span>:
+              <span id="tt-details" style="margin-left:8px; color:var(--slate-700)">รายรับ <strong>฿235,231.00</strong> | รายจ่าย <strong>฿52,320.00</strong></span>
+            </div>
+            <span id="tt-profit" style="font-weight:800; color:var(--emerald-700)">กำไรสุทธิ +฿182,911.00</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="chart-card-header" style="margin-bottom:4px">🍩 สัดส่วนค่าใช้จ่ายแยกตามหมวดหมู่</div>
+          <p style="font-size:0.82rem; color:var(--slate-600); margin-bottom:12px">แตะที่หมวดหมู่เพื่อดูรายการบิลย่อย</p>
+
+          <div class="svg-chart-container">
+            <svg width="190" height="190" viewBox="0 0 42 42">
+              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#e2e8f0" stroke-width="5"/>
+              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#059669" stroke-width="5" stroke-dasharray="60 40" stroke-dashoffset="25" class="pie-segment" onclick="drillDownCategory('ปุ๋ย/ยา/สารเคมี', '60%')"/>
+              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#d97706" stroke-width="5" stroke-dasharray="30 70" stroke-dashoffset="65" class="pie-segment" onclick="drillDownCategory('ค่าแรงงานเกษตร', '30%')"/>
+              <circle cx="21" cy="21" r="15.915" fill="transparent" stroke="#2563eb" stroke-width="5" stroke-dasharray="10 90" stroke-dashoffset="35" class="pie-segment" onclick="drillDownCategory('กองกลาง/อื่นๆ', '10%')"/>
+            </svg>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">
+            <div class="chart-pill active" onclick="drillDownCategory('ปุ๋ย/ยา/สารเคมี', '60%')">
+              <span style="color:#059669">● ค่าปุ๋ย ยา และสารแพคโคล (60%)</span>
+            </div>
+            <div class="chart-pill" onclick="drillDownCategory('ค่าแรงงานเกษตร', '30%')">
+              <span style="color:#d97706">● ค่าแรงงานพ่นยา โยงลูก แต่งกิ่ง (30%)</span>
+            </div>
+            <div class="chart-pill" onclick="drillDownCategory('กองกลาง/อื่นๆ', '10%')">
+              <span style="color:#2563eb">● ค่าน้ำมัน อุปกรณ์ และกองกลาง (10%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="drilldown-card" class="card hidden" style="margin-bottom:24px; border-color:var(--emerald-500); background:var(--emerald-50);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+          <h3 id="drill-title" style="font-size:1.05rem; font-weight:800; color:var(--emerald-800)">🔍 รายละเอียดรายการในหมวดหมู่</h3>
+          <button class="btn btn-outline" style="height:36px; padding:0 12px; font-size:0.82rem;" onclick="document.getElementById('drilldown-card').classList.add('hidden')">✕ ปิดหน้าต่าง</button>
+        </div>
+        <div class="table-container">
+          <table class="table-responsive-card">
+            <thead>
+              <tr>
+                <th>วันที่</th>
+                <th>หมวดหมู่</th>
+                <th>รายละเอียด</th>
+                <th>แปลงสวน</th>
+                <th style="text-align:right">จำนวนเงิน</th>
+              </tr>
+            </thead>
+            <tbody id="drill-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 
-  <!-- Professional Mobile Bottom Navigation Bar (5-slot layout with centered primary action button) -->
-  <nav class="mobile-nav" aria-label="แถบเมนูมือถือ">
-    <!-- Slot 1: ภาพรวม -->
-    <button class="mobile-nav-btn active" id="mob-dash-btn" onclick="switchView('dashboard')">
+  <!-- แถบเมนูด้านล่างสำหรับมือถือ (5 ช่อง พร้อมปุ่มลัด "+" สีเขียวตรงกลาง) -->
+  <nav class="mobile-nav" aria-label="แถบเมนูหลัก">
+    <button class="mobile-nav-btn active" id="mob-dashboard-btn" onclick="switchView('dashboard')">
       <div class="nav-icon-wrap">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="7" height="9" x="3" y="3" rx="1.5"/>
           <rect width="7" height="5" x="14" y="3" rx="1.5"/>
           <rect width="7" height="9" x="14" y="12" rx="1.5"/>
@@ -1870,33 +1213,31 @@
       <span>ภาพรวม</span>
     </button>
 
-    <!-- Slot 2: ตรวจดิน/อากาศ -->
     <button class="mobile-nav-btn" id="mob-agrotech-btn" onclick="switchView('agrotech')">
       <div class="nav-icon-wrap">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 2a5 5 0 0 0-5 5v7a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5Z"/>
           <path d="M12 9v4"/>
           <path d="M10 17a2 2 0 1 0 4 0"/>
         </svg>
       </div>
-      <span>ตรวจแปลง</span>
+      <span>ดิน/อากาศ</span>
     </button>
 
-    <!-- Slot 3 (CENTER ACTION): บันทึกกิจกรรมแปลง -->
+    <!-- ปุ่มลัด "+" สีเขียวเด่นตรงกลาง สำหรับกดบันทึกงานสวนหรือบันทึกรายจ่ายทันที -->
     <div class="mobile-center-slot">
-      <button class="mobile-add-btn" id="mob-field-btn" onclick="switchView('field')" aria-label="เพิ่มบันทึกกิจกรรมแปลง" title="เพิ่มกิจกรรมแปลง">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <button class="mobile-add-btn" id="mob-center-add-btn" onclick="openMobileSheet()" aria-label="จดบันทึกด่วน" title="จดบันทึกด่วน">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
       </button>
-      <span class="center-btn-label">เพิ่มกิจกรรม</span>
+      <span class="center-btn-label">จดบันทึก</span>
     </div>
 
-    <!-- Slot 4: คำนวณปุ๋ย/ยา -->
     <button class="mobile-nav-btn" id="mob-calc-btn" onclick="switchView('calc')">
       <div class="nav-icon-wrap">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="16" height="20" x="4" y="2" rx="3"/>
           <line x1="8" x2="16" y1="7" y2="7"/>
           <line x1="8" x2="10" y1="12" y2="12"/>
@@ -1908,68 +1249,121 @@
       <span>คำนวณปุ๋ย</span>
     </button>
 
-    <!-- Slot 5: บัญชีการเงิน -->
-    <button class="mobile-nav-btn" id="mob-acc-btn" onclick="switchView('accounting')">
+    <button class="mobile-nav-btn" id="mob-accounting-btn" onclick="switchView('accounting')">
       <div class="nav-icon-wrap">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <rect width="20" height="14" x="2" y="5" rx="3"/>
           <line x1="2" x2="22" y1="10" y2="10"/>
           <circle cx="17" cy="15" r="1.5"/>
         </svg>
       </div>
-      <span>บัญชี</span>
+      <span>สมุดบัญชี</span>
     </button>
   </nav>
 
-  <!-- Mobile Quick Action Drawer / Bottom Sheet (กดเพื่อสลับเมนูเพิ่มเติม) -->
+  <!-- ถาดเมนูลัดเมื่อกดปุ่ม "+" ตรงกลางบนมือถือ -->
   <div id="mobile-action-sheet" class="mobile-sheet-overlay hidden" onclick="closeMobileSheet(event)">
     <div class="mobile-sheet-card" onclick="event.stopPropagation()">
       <div class="mobile-sheet-handle"></div>
-      <div class="mobile-sheet-title">เมนูระบบสวนทุเรียน AgriDash Pro</div>
+      <div class="mobile-sheet-title">⚡ เลือกรายการที่ต้องการบันทึกด่วน</div>
       <div class="mobile-sheet-grid">
-        <button class="mobile-sheet-item" onclick="switchView('dashboard'); closeMobileSheet();">
-          <div class="sheet-icon" style="background:#ecfdf5; color:#059669;">🌳</div>
-          <span>ภาพรวมสวน</span>
+        <button class="mobile-sheet-item" onclick="quickOpenExpense(); closeMobileSheet();">
+          <div class="sheet-icon" style="background:var(--rose-100); color:var(--rose-700);">🔴</div>
+          <div>
+            <span>บันทึกรายจ่าย</span>
+            <div style="font-size:0.75rem; color:var(--slate-500); font-weight:600;">ซื้อปุ๋ย ยา ค่าแรง</div>
+          </div>
+        </button>
+        <button class="mobile-sheet-item" onclick="quickOpenIncome(); closeMobileSheet();">
+          <div class="sheet-icon" style="background:var(--emerald-100); color:var(--emerald-700);">🟢</div>
+          <div>
+            <span>บันทึกรายรับ</span>
+            <div style="font-size:0.75rem; color:var(--slate-500); font-weight:600;">ขายทุเรียน เงินกองกลาง</div>
+          </div>
         </button>
         <button class="mobile-sheet-item" onclick="switchView('field'); closeMobileSheet();">
-          <div class="sheet-icon" style="background:#10b981; color:#fff;">➕</div>
-          <span style="font-weight:700; color:#047857;">บันทึกแปลง</span>
+          <div class="sheet-icon" style="background:var(--blue-100); color:var(--blue-700);">⚙️</div>
+          <div>
+            <span>บันทึกงานแปลง</span>
+            <div style="font-size:0.75rem; color:var(--slate-500); font-weight:600;">พ่นยา ทำสาร ตัดหญ้า</div>
+          </div>
         </button>
         <button class="mobile-sheet-item" onclick="switchView('plant'); closeMobileSheet();">
-          <div class="sheet-icon" style="background:#f0fdf4; color:#16a34a;">🌿</div>
-          <span>สำรวจต้น</span>
+          <div class="sheet-icon" style="background:var(--amber-100); color:var(--amber-800);">🌿</div>
+          <div>
+            <span>สำรวจสุขภาพต้น</span>
+            <div style="font-size:0.75rem; color:var(--slate-500); font-weight:600;">ตรวจใบ ดอก โรคไฟทอป</div>
+          </div>
         </button>
         <button class="mobile-sheet-item" onclick="switchView('agrotech'); closeMobileSheet();">
-          <div class="sheet-icon" style="background:#eff6ff; color:#2563eb;">🔬</div>
-          <span>ดิน/น้ำ/อากาศ</span>
-        </button>
-        <button class="mobile-sheet-item" onclick="switchView('calc'); closeMobileSheet();">
-          <div class="sheet-icon" style="background:#fef3c7; color:#d97706;">🧮</div>
-          <span>คำนวณปุ๋ย</span>
+          <div class="sheet-icon" style="background:#e0f2fe; color:#0369a1;">💧</div>
+          <div>
+            <span>บันทึกค่าดิน/น้ำ</span>
+            <div style="font-size:0.75rem; color:var(--slate-500); font-weight:600;">ความชื้น pH อากาศ</div>
+          </div>
         </button>
         <button class="mobile-sheet-item" onclick="switchView('finance'); closeMobileSheet();">
-          <div class="sheet-icon" style="background:#fdf2f8; color:#db2777;">📊</div>
-          <span>งบการเงิน</span>
-        </button>
-        <button class="mobile-sheet-item" onclick="switchView('accounting'); closeMobileSheet();">
-          <div class="sheet-icon" style="background:#f5f3ff; color:#7c3aed;">💰</div>
-          <span>สมุดบัญชี</span>
+          <div class="sheet-icon" style="background:var(--purple-100); color:var(--purple-600);">📊</div>
+          <div>
+            <span>ดูกราฟการเงิน</span>
+            <div style="font-size:0.75rem; color:var(--slate-500); font-weight:600;">วิเคราะห์กำไร-ต้นทุน</div>
+          </div>
         </button>
       </div>
-      <button class="btn btn-outline" style="width:100%; height:44px; margin-top:14px; font-weight:700;" onclick="closeMobileSheet()">✕ ปิดหน้าต่าง</button>
+      <button class="btn btn-outline" style="width:100%; height:46px; margin-top:16px;" onclick="closeMobileSheet()">✕ ปิดหน้าต่าง</button>
     </div>
   </div>
 
+  <!-- หน้าต่างตั้งค่าและเปิดดู Google Sheet สำรอง -->
+  <div id="sheets-modal" class="auth-overlay hidden" onclick="closeSheetsModal(event)">
+    <div class="auth-card" style="max-width:560px;" onclick="event.stopPropagation()">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div class="auth-title" style="margin-bottom:0; text-align:left;">📊 ระบบสำรองข้อมูล Google Sheet</div>
+        <button type="button" class="btn btn-outline" style="height:36px; width:36px; padding:0;" onclick="closeSheetsModal()">✕</button>
+      </div>
+      <div class="auth-subtitle" style="text-align:left; margin-bottom:16px;">
+        สำรองข้อมูลสมุดบัญชีและงานคำนวณปุ๋ย/ยาเข้า Google Sheet อัตโนมัติ เผื่อกรณีฐานข้อมูลคลาวด์ไม่พร้อมใช้งาน
+      </div>
 
-  <!-- Toast -->
+      <div style="background:var(--emerald-50); border:1.5px solid var(--emerald-200); border-radius:12px; padding:14px; margin-bottom:16px;">
+        <div style="font-size:0.86rem; font-weight:800; color:var(--emerald-800); margin-bottom:6px;" id="sheets-modal-status">🔄 กำลังตรวจสอบการเชื่อมต่อ...</div>
+        <a id="sheets-direct-link" href="https://docs.google.com/spreadsheets/d/1Z5VJksCIxIYji6FrmG2faT4M27yXbnlg-rbP3e9koOY/edit" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%; height:44px; text-decoration:none; margin-top:6px;">
+          🔗 เปิดไฟล์ Google Sheet สำรองของฉัน
+        </a>
+      </div>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>ลิงก์ Google Apps Script Web App</label>
+        <input type="url" id="sheets-webhook-input" class="form-control" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
+        <button type="button" class="btn btn-primary" onclick="saveSheetsWebhook()">💾 บันทึกลิงก์เชื่อมต่อ</button>
+        <button type="button" class="btn btn-outline" onclick="flushAllToGoogleSheet()">🔄 ซิงค์ข้อมูลทั้งหมดขึ้น Sheet</button>
+      </div>
+
+      <div style="background:var(--slate-50); border:1.5px solid var(--slate-200); border-radius:12px; padding:14px;">
+        <div style="font-size:0.86rem; font-weight:800; color:var(--slate-800); margin-bottom:6px;">📌 วิธีเปิดใช้งานลิงก์ซิงค์อัตโนมัติ (ทำครั้งเดียว 1 นาที):</div>
+        <ol style="font-size:0.82rem; color:var(--slate-700); padding-left:18px; line-height:1.65;">
+          <li>กดปุ่ม <strong>เปิดไฟล์ Google Sheet สำรองของฉัน</strong> ด้านบน</li>
+          <li>ไปที่เมนู <strong>ส่วนขยาย ➔ Apps Script</strong></li>
+          <li>กดปุ่ม <strong>คัดลอกโค้ด</strong> ด้านล่างแล้ววางทับโค้ดเดิมทั้งหมด จากนั้นกดบันทึก</li>
+          <li>กด <strong>ทำให้ใช้งานได้ ➔ การทำให้ใช้งานได้รายการใหม่ ➔ เว็บแอป</strong> (สิทธิ์การเข้าถึงเลือก <strong>ทุกคน</strong>) แล้วนำลิงก์มาวางในช่องด้านบน</li>
+        </ol>
+        <button type="button" class="btn btn-outline" style="width:100%; height:40px; margin-top:10px; font-size:0.85rem;" onclick="copyAppsScriptCode()">
+          📋 คัดลอกโค้ด Google Apps Script
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- แจ้งเตือนมุมจอ (Toast) -->
   <div id="toast" class="toast">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
     <span id="toast-text">บันทึกข้อมูลสำเร็จ!</span>
   </div>
 
-    <!-- Legacy inline script replaced by modular app.js -->
-
-  <!-- AgriDash v2 Modules -->
+  <!-- สคริปต์ระบบ AgriDash -->
   <script src="js/storage.js"></script>
   <script src="js/app.js"></script>
 </body>
