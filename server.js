@@ -72,7 +72,33 @@ const FieldLogModel = mongoose.model("FieldLog", FieldLogSchema);
 const PlantSurveyModel = mongoose.model("PlantSurvey", PlantSurveySchema);
 const AccEntryModel = mongoose.model("AccEntry", AccEntrySchema);
 
+const AppConfigSchema = new mongoose.Schema({
+  key: { type: String, unique: true, required: true },
+  spreadsheetId: String,
+  spreadsheetUrl: String,
+  webhookUrl: String
+}, { timestamps: true });
+const AppConfigModel = mongoose.model("AppConfig", AppConfigSchema);
+
 let isMongoConnected = false;
+let cachedSheetsConfig = null;
+
+async function syncSheetsConfigFromMongo() {
+  if (!isMongoConnected) return;
+  try {
+    const doc = await AppConfigModel.findOne({ key: "sheets_config" }).lean();
+    if (doc && doc.webhookUrl) {
+      cachedSheetsConfig = {
+        spreadsheetId: doc.spreadsheetId || DEFAULT_SHEET_ID,
+        spreadsheetUrl: doc.spreadsheetUrl || DEFAULT_SHEET_URL,
+        webhookUrl: doc.webhookUrl.trim()
+      };
+      writeSheetsConfig(cachedSheetsConfig);
+    }
+  } catch (e) {
+    console.warn("Could not read sheets_config from MongoDB:", e.message);
+  }
+}
 
 const connectMongoDB = () => {
   if (!MONGODB_URI || MONGODB_URI.includes("<db_password>")) {
@@ -81,7 +107,11 @@ const connectMongoDB = () => {
   }
   if (isMongoConnected) return;
   mongoose.connect(MONGODB_URI, { serverSelectionTimeoutMS: 5000 })
-    .then(() => { isMongoConnected = true; console.log("🟢 Successfully connected to MongoDB Atlas Cloud!"); })
+    .then(async () => {
+      isMongoConnected = true;
+      console.log("🟢 Successfully connected to MongoDB Atlas Cloud!");
+      await syncSheetsConfigFromMongo();
+    })
     .catch(err => { isMongoConnected = false; console.warn("⚠️ MongoDB notice:", err.message); });
 };
 
@@ -125,13 +155,14 @@ function readSheetsConfig() {
     }
   } catch (e) {}
   return {
-    spreadsheetId: fileCfg.spreadsheetId || DEFAULT_SHEET_ID,
-    spreadsheetUrl: fileCfg.spreadsheetUrl || DEFAULT_SHEET_URL,
-    webhookUrl: (fileCfg.webhookUrl || process.env.GOOGLE_SHEETS_WEBHOOK_URL || "").trim()
+    spreadsheetId: fileCfg.spreadsheetId || (cachedSheetsConfig && cachedSheetsConfig.spreadsheetId) || DEFAULT_SHEET_ID,
+    spreadsheetUrl: fileCfg.spreadsheetUrl || (cachedSheetsConfig && cachedSheetsConfig.spreadsheetUrl) || DEFAULT_SHEET_URL,
+    webhookUrl: (fileCfg.webhookUrl || (cachedSheetsConfig && cachedSheetsConfig.webhookUrl) || process.env.GOOGLE_SHEETS_WEBHOOK_URL || "").trim()
   };
 }
 
 function writeSheetsConfig(cfg) {
+  cachedSheetsConfig = cfg;
   try {
     fs.writeFileSync(SHEETS_CONFIG_FILE, JSON.stringify(cfg, null, 2), "utf-8");
     return true;
@@ -183,12 +214,12 @@ function buildAccSheetRow(entry, userEmail) {
     entry.category || "-",
     entry.detail || "-",
     Number(entry.amount || 0),
-    userEmail || "guest",
+    userEmail || entry.userEmail || "guest",
     nowThai
   ];
 }
 
-function buildFieldSheetRow(log) {
+function buildFieldSheetRow(log, userEmail) {
   const nowThai = new Date().toLocaleString("th-TH", { timeZone: "Asia/Bangkok" });
   return [
     log.id || ("field-" + Date.now()),
@@ -197,6 +228,22 @@ function buildFieldSheetRow(log) {
     log.activity || "-",
     log.detail || "-",
     Number(log.cost || 0),
+    userEmail || log.userEmail || "guest",
+    nowThai
+  ];
+}
+
+function buildPlantSurveySheetRow(survey, userEmail) {
+  const nowThai = new Date().toLocaleString("th-TH", { timeZone: "Asia/Bangkok" });
+  return [
+    survey.id || ("survey-" + Date.now()),
+    formatDateSlashThai(survey.date),
+    survey.plot || "ทุกแปลง",
+    survey.stage || "-",
+    survey.leafPest || "-",
+    survey.trunk || "-",
+    survey.recommendation || "-",
+    userEmail || survey.userEmail || "guest",
     nowThai
   ];
 }
@@ -447,7 +494,7 @@ app.post("/api/ledger/calc-expense", validateUserEmail, async (req, res) => {
   if (fieldLog && fieldLog.id) {
     fieldSheetRes = await postToGoogleSheetWebhook(
       "งานแปลงและคำนวณปุ๋ย",
-      [buildFieldSheetRow(fieldLog)],
+      [buildFieldSheetRow(fieldLog, userEmail)],
       [fieldLog.id]
     );
   }
@@ -469,7 +516,10 @@ app.post("/api/ledger/calc-expense", validateUserEmail, async (req, res) => {
 });
 
 // อ่าน/บันทึกการตั้งค่า Google Sheet Webhook
-app.get("/api/sheets/config", (req, res) => {
+app.get("/api/sheets/config", async (req, res) => {
+  if (isMongoConnected && (!cachedSheetsConfig || !cachedSheetsConfig.webhookUrl)) {
+    await syncSheetsConfigFromMongo();
+  }
   const cfg = readSheetsConfig();
   const backupLog = readSheetsBackupLog();
   res.json({
@@ -492,6 +542,18 @@ app.post("/api/sheets/config", async (req, res) => {
     webhookUrl: typeof webhookUrl === "string" ? webhookUrl.trim() : current.webhookUrl
   };
   writeSheetsConfig(nextCfg);
+
+  if (isMongoConnected) {
+    try {
+      await AppConfigModel.findOneAndUpdate(
+        { key: "sheets_config" },
+        { key: "sheets_config", ...nextCfg },
+        { upsert: true, new: true }
+      );
+    } catch (e) {
+      console.warn("Could not save sheets_config to MongoDB:", e.message);
+    }
+  }
 
   // อัปเดต .env ด้วยเพื่อให้คงอยู่หลังรีสตาร์ท
   try {
@@ -520,13 +582,16 @@ app.post("/api/sheets/config", async (req, res) => {
 // ส่งรายการเดี่ยวหรือหลายรายการเข้า Google Sheet
 app.post("/api/sheets/sync", validateUserEmail, async (req, res) => {
   const userEmail = (req.body.userEmail || "guest").toLowerCase().trim();
-  const { accEntry, fieldLog } = req.body || {};
+  const { accEntry, fieldLog, plantSurvey } = req.body || {};
   const results = {};
   if (accEntry) {
     results.acc = await postToGoogleSheetWebhook("สมุดบัญชี", [buildAccSheetRow(accEntry, userEmail)], [accEntry.id]);
   }
   if (fieldLog) {
-    results.field = await postToGoogleSheetWebhook("งานแปลงและคำนวณปุ๋ย", [buildFieldSheetRow(fieldLog)], [fieldLog.id]);
+    results.field = await postToGoogleSheetWebhook("งานแปลงและคำนวณปุ๋ย", [buildFieldSheetRow(fieldLog, userEmail)], [fieldLog.id]);
+  }
+  if (plantSurvey) {
+    results.plant = await postToGoogleSheetWebhook("สำรวจสุขภาพต้น", [buildPlantSurveySheetRow(plantSurvey, userEmail)], [plantSurvey.id]);
   }
   const cfg = readSheetsConfig();
   res.json({
@@ -540,6 +605,9 @@ app.post("/api/sheets/sync", validateUserEmail, async (req, res) => {
 // ซิงค์ข้อมูลทั้งหมด (MongoDB / Local + คิวค้างส่ง) ขึ้น Google Sheet
 app.post("/api/sheets/flush", validateUserEmail, async (req, res) => {
   const userEmail = (req.body.userEmail || "guest").toLowerCase().trim();
+  if (isMongoConnected && (!cachedSheetsConfig || !cachedSheetsConfig.webhookUrl)) {
+    await syncSheetsConfigFromMongo();
+  }
   const cfg = readSheetsConfig();
   if (!cfg.webhookUrl) {
     return res.status(400).json({ success: false, message: "ยังไม่ได้ใส่ลิงก์ Google Apps Script Web App" });
@@ -547,20 +615,24 @@ app.post("/api/sheets/flush", validateUserEmail, async (req, res) => {
 
   let accEntries = [];
   let fieldLogs = [];
+  let plantSurveys = [];
   if (isMongoConnected) {
     try {
       accEntries = await AccEntryModel.find({ userEmail }).lean();
       fieldLogs = await FieldLogModel.find({ userEmail }).lean();
+      plantSurveys = await PlantSurveyModel.find({ userEmail }).lean();
     } catch (e) {}
   }
-  if (!accEntries.length && !fieldLogs.length) {
+  if (!accEntries.length && !fieldLogs.length && !plantSurveys.length) {
     const local = readLocalData();
     accEntries = local.accEntries.filter(i => (i.userEmail || "guest").toLowerCase() === userEmail);
     fieldLogs = local.fieldLogs.filter(i => (i.userEmail || "guest").toLowerCase() === userEmail);
+    plantSurveys = local.plantSurveys.filter(i => (i.userEmail || "guest").toLowerCase() === userEmail);
   }
 
   let accRes = { synced: true };
   let fieldRes = { synced: true };
+  let plantRes = { synced: true };
   if (accEntries.length > 0) {
     accRes = await postToGoogleSheetWebhook(
       "สมุดบัญชี",
@@ -571,18 +643,27 @@ app.post("/api/sheets/flush", validateUserEmail, async (req, res) => {
   if (fieldLogs.length > 0) {
     fieldRes = await postToGoogleSheetWebhook(
       "งานแปลงและคำนวณปุ๋ย",
-      fieldLogs.map(l => buildFieldSheetRow(l)),
+      fieldLogs.map(l => buildFieldSheetRow(l, userEmail)),
       fieldLogs.map(l => l.id)
     );
   }
+  if (plantSurveys.length > 0) {
+    plantRes = await postToGoogleSheetWebhook(
+      "สำรวจสุขภาพต้น",
+      plantSurveys.map(s => buildPlantSurveySheetRow(s, userEmail)),
+      plantSurveys.map(s => s.id)
+    );
+  }
 
+  const allOk = accRes.synced && fieldRes.synced && plantRes.synced;
   res.json({
-    success: accRes.synced && fieldRes.synced,
+    success: allOk,
     accCount: accEntries.length,
     fieldCount: fieldLogs.length,
+    plantCount: plantSurveys.length,
     spreadsheetUrl: cfg.spreadsheetUrl,
-    message: (accRes.synced && fieldRes.synced)
-      ? `ซิงค์ข้อมูลบัญชี ${accEntries.length} รายการ และงานแปลง ${fieldLogs.length} รายการ ขึ้น Google Sheet สำเร็จ!`
+    message: allOk
+      ? `ซิงค์ข้อมูลบัญชี ${accEntries.length} รายการ, งานแปลง ${fieldLogs.length} รายการ และสำรวจต้น ${plantSurveys.length} รายการ ขึ้น Google Sheet สำเร็จ!`
       : "เชื่อมต่อ Webhook ไม่สำเร็จ กรุณาตรวจสอบลิงก์และสิทธิ์การเข้าถึง (Anyone)"
   });
 });

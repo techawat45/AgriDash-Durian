@@ -741,6 +741,7 @@ function saveFieldLog(e) {
 
   fieldLogs.unshift(log);
   saveLocalData();
+  syncSingleEntryToSheet({ fieldLog: log });
   renderFieldLogs();
   showToast('บันทึกกิจกรรมแปลงวันที่ ' + formatDateSlashThai(dateVal) + ' สำเร็จ!', 'success');
   setTimeout(() => switchView('dashboard'), 1000);
@@ -779,6 +780,7 @@ function savePlantSurvey(e) {
 
   plantSurveys.unshift(survey);
   saveLocalData();
+  syncSingleEntryToSheet({ plantSurvey: survey });
   renderPlantSurveys();
   showToast('บันทึกผลสำรวจแปลง ' + plotVal + ' สำเร็จ!', 'success');
   setTimeout(() => switchView('dashboard'), 1000);
@@ -1237,6 +1239,7 @@ function savePredictorPlan() {
   };
   fieldLogs.unshift(log);
   saveLocalData();
+  syncSingleEntryToSheet({ fieldLog: log });
   renderFieldLogs();
   showToast('บันทึกแผนคาดการณ์ลงประวัติแปลงเรียบร้อย', 'success');
 }
@@ -1479,6 +1482,7 @@ function saveAgroMeasurements() {
   };
   fieldLogs.unshift(log);
   saveLocalData();
+  syncSingleEntryToSheet({ fieldLog: log });
   renderFieldLogs();
   showToast('บันทึกค่าตรวจวัดดินและอากาศเรียบร้อย', 'success');
 }
@@ -1636,7 +1640,7 @@ function showSensorTooltip(title, d15, d30) {
 const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
-    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var ss = data.spreadsheetId ? SpreadsheetApp.openById(data.spreadsheetId) : SpreadsheetApp.getActiveSpreadsheet();
     var sheetName = data.sheetName || "สมุดบัญชี";
     var sheet = ss.getSheetByName(sheetName);
     if (!sheet) sheet = ss.insertSheet(sheetName);
@@ -1665,22 +1669,22 @@ const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
   }
 }`;
 
-async function syncSingleEntryToSheet({ accEntry = null, fieldLog = null }) {
+async function syncSingleEntryToSheet({ accEntry = null, fieldLog = null, plantSurvey = null }) {
   try {
     const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/sync'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest', accEntry, fieldLog }),
-      signal: AbortSignal.timeout(8000)
+      body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest', accEntry, fieldLog, plantSurvey }),
+      signal: AbortSignal.timeout(15000)
     });
     const res = await AGRI_STORAGE.parseResponseSafely(r);
     if (res && res.success) refreshSheetsStatus();
   } catch (e) {
-    await fallbackDirectBrowserWebhook(accEntry, fieldLog);
+    await fallbackDirectBrowserWebhook(accEntry, fieldLog, plantSurvey);
   }
 }
 
-async function fallbackDirectBrowserWebhook(accEntry, fieldLog) {
+async function fallbackDirectBrowserWebhook(accEntry, fieldLog, plantSurvey = null) {
   const url = localStorage.getItem('agridash_sheets_webhook_url') || '';
   if (!url) return false;
   const nowThai = new Date().toLocaleString('th-TH');
@@ -1691,6 +1695,7 @@ async function fallbackDirectBrowserWebhook(accEntry, fieldLog) {
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
+          spreadsheetId: '1Z5VJksCIxIYji6FrmG2faT4M27yXbnlg-rbP3e9koOY',
           sheetName: 'สมุดบัญชี',
           rows: [[
             accEntry.id,
@@ -1712,6 +1717,7 @@ async function fallbackDirectBrowserWebhook(accEntry, fieldLog) {
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
+          spreadsheetId: '1Z5VJksCIxIYji6FrmG2faT4M27yXbnlg-rbP3e9koOY',
           sheetName: 'งานแปลงและคำนวณปุ๋ย',
           rows: [[
             fieldLog.id,
@@ -1720,6 +1726,29 @@ async function fallbackDirectBrowserWebhook(accEntry, fieldLog) {
             fieldLog.activity || '-',
             fieldLog.detail || '-',
             Number(fieldLog.cost || 0),
+            currentLoggedInEmail || 'guest',
+            nowThai
+          ]]
+        })
+      });
+    }
+    if (plantSurvey) {
+      await fetch(url, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          spreadsheetId: '1Z5VJksCIxIYji6FrmG2faT4M27yXbnlg-rbP3e9koOY',
+          sheetName: 'สำรวจสุขภาพต้น',
+          rows: [[
+            plantSurvey.id,
+            formatDateSlashThai(plantSurvey.date),
+            plantSurvey.plot || 'ทุกแปลง',
+            plantSurvey.stage || '-',
+            plantSurvey.leafPest || '-',
+            plantSurvey.trunk || '-',
+            plantSurvey.recommendation || '-',
+            currentLoggedInEmail || 'guest',
             nowThai
           ]]
         })
@@ -1817,7 +1846,7 @@ async function flushAllToGoogleSheet() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest' }),
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(20000)
     });
     const res = await AGRI_STORAGE.parseResponseSafely(r);
     showToast('✅ ' + (res.message || 'ซิงค์สำเร็จ'), 'success');
@@ -1828,10 +1857,18 @@ async function flushAllToGoogleSheet() {
     if (localUrl) {
       let sentCount = 0;
       for (const entry of accEntries) {
-        await fallbackDirectBrowserWebhook(entry, null);
+        await fallbackDirectBrowserWebhook(entry, null, null);
         sentCount++;
       }
-      showToast(`✅ ส่งสำรอง ${sentCount} รายการบัญชีขึ้น Google Sheet สำเร็จ!`, 'success');
+      for (const log of fieldLogs) {
+        await fallbackDirectBrowserWebhook(null, log, null);
+        sentCount++;
+      }
+      for (const survey of plantSurveys) {
+        await fallbackDirectBrowserWebhook(null, null, survey);
+        sentCount++;
+      }
+      showToast(`✅ ส่งสำรอง ${sentCount} รายการทั้งหมดขึ้น Google Sheet สำเร็จ!`, 'success');
       refreshSheetsStatus();
     } else {
       showToast('⚠️ เซิร์ฟเวอร์ออฟไลน์ — บันทึกข้อมูลในเครื่องเรียบร้อย', 'warning');
