@@ -24,6 +24,7 @@ const SHEETS_BACKUP_FILE = path.join(__dirname, "sheets-backup.json");
 const MONGODB_URI = process.env.MONGODB_URI || "";
 const DEFAULT_SHEET_ID = process.env.GOOGLE_SHEET_ID || "1Z5VJksCIxIYji6FrmG2faT4M27yXbnlg-rbP3e9koOY";
 const DEFAULT_SHEET_URL = process.env.GOOGLE_SHEET_URL || `https://docs.google.com/spreadsheets/d/${DEFAULT_SHEET_ID}/edit`;
+const DEFAULT_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || "https://script.google.com/macros/s/AKfycbwVf9LIXdaMpM6ZVzRwWkBm561bPyzs3Hn0LevgqONarzqaJbMIlZEG513XlDqircZmBg/exec";
 
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
@@ -157,7 +158,7 @@ function readSheetsConfig() {
   return {
     spreadsheetId: fileCfg.spreadsheetId || (cachedSheetsConfig && cachedSheetsConfig.spreadsheetId) || DEFAULT_SHEET_ID,
     spreadsheetUrl: fileCfg.spreadsheetUrl || (cachedSheetsConfig && cachedSheetsConfig.spreadsheetUrl) || DEFAULT_SHEET_URL,
-    webhookUrl: (fileCfg.webhookUrl || (cachedSheetsConfig && cachedSheetsConfig.webhookUrl) || process.env.GOOGLE_SHEETS_WEBHOOK_URL || "").trim()
+    webhookUrl: (fileCfg.webhookUrl || (cachedSheetsConfig && cachedSheetsConfig.webhookUrl) || DEFAULT_WEBHOOK_URL || "").trim()
   };
 }
 

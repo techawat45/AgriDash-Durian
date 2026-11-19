@@ -1684,8 +1684,10 @@ async function syncSingleEntryToSheet({ accEntry = null, fieldLog = null, plantS
   }
 }
 
+const DEFAULT_SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwVf9LIXdaMpM6ZVzRwWkBm561bPyzs3Hn0LevgqONarzqaJbMIlZEG513XlDqircZmBg/exec';
+
 async function fallbackDirectBrowserWebhook(accEntry, fieldLog, plantSurvey = null) {
-  const url = localStorage.getItem('agridash_sheets_webhook_url') || '';
+  const url = localStorage.getItem('agridash_sheets_webhook_url') || DEFAULT_SHEETS_WEBHOOK_URL;
   if (!url) return false;
   const nowThai = new Date().toLocaleString('th-TH');
   try {
@@ -1853,7 +1855,7 @@ async function flushAllToGoogleSheet() {
     refreshSheetsStatus();
   } catch (e) {
     // โหมดออฟไลน์ / GitHub Pages: ยิงสำรองตรงเข้า Apps Script จากเบราว์เซอร์
-    const localUrl = localStorage.getItem('agridash_sheets_webhook_url');
+    const localUrl = localStorage.getItem('agridash_sheets_webhook_url') || DEFAULT_SHEETS_WEBHOOK_URL;
     if (localUrl) {
       let sentCount = 0;
       for (const entry of accEntries) {
