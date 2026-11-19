@@ -201,37 +201,160 @@ function hidePageLoader() {
   }, 450);
 }
 
-function updateAvatarUI(email, firstName) {
+function updateAvatarUI(email, firstName, farmName) {
+  const isGuest = !email || email === 'guest';
   const disp = document.getElementById('user-email-display');
   const av = document.getElementById('avatar-display');
-  if (disp) disp.innerText = email === 'guest' ? 'ผู้ใช้งานทั่วไป' : email;
-  if (av) {
-    const str = (firstName ? firstName.substring(0, 2) : (email === 'guest' ? 'สวน' : email.substring(0, 2))).toUpperCase();
-    av.childNodes[0].nodeValue = str;
+  const loginHeaderBtn = document.getElementById('header-guest-login-btn');
+  const statusBadge = document.getElementById('user-status-badge');
+  const menuTitle = document.getElementById('user-menu-title');
+  const menuLoginBtn = document.getElementById('menu-login-btn');
+  const menuRegisterBtn = document.getElementById('menu-register-btn');
+  const menuSwitchBtn = document.getElementById('menu-switch-btn');
+  const menuLogoutBtn = document.getElementById('menu-logout-btn');
+  const mobAuthTitle = document.getElementById('mob-sheet-auth-title');
+  const mobAuthSub = document.getElementById('mob-sheet-auth-sub');
+
+  if (isGuest) {
+    if (disp) disp.innerText = 'ข้อมูลบันทึกในเครื่อง & กองกลาง';
+    if (menuTitle) menuTitle.innerText = 'โหมดผู้เยี่ยมชม (Guest)';
+    if (loginHeaderBtn) loginHeaderBtn.style.display = 'inline-flex';
+    if (statusBadge) {
+      statusBadge.className = 'badge-guest';
+      statusBadge.innerText = '👤 ผู้เยี่ยมชม';
+    }
+    if (av) {
+      av.classList.add('avatar-guest');
+      av.childNodes[0].nodeValue = 'สวน';
+      av.title = 'ผู้เยี่ยมชม — คลิกเพื่อเข้าสู่ระบบหรือจัดการบัญชี';
+    }
+    if (menuLoginBtn) menuLoginBtn.style.display = 'flex';
+    if (menuRegisterBtn) menuRegisterBtn.style.display = 'flex';
+    if (menuSwitchBtn) menuSwitchBtn.style.display = 'flex';
+    if (menuLogoutBtn) menuLogoutBtn.innerText = '🧹 ล้างแคชผู้เยี่ยมชม';
+
+    if (mobAuthTitle) mobAuthTitle.innerText = 'เข้าสู่ระบบ (Login)';
+    if (mobAuthSub) mobAuthSub.innerText = 'เชื่อมต่อบัญชีจริง MongoDB Atlas';
+  } else {
+    const cleanEmail = email.toLowerCase();
+    const displayName = firstName || farmName || cleanEmail.split('@')[0];
+    if (disp) disp.innerText = cleanEmail;
+    if (menuTitle) menuTitle.innerText = farmName ? `🏡 ${farmName}` : `👤 ${displayName}`;
+    if (loginHeaderBtn) loginHeaderBtn.style.display = 'none';
+    if (statusBadge) {
+      statusBadge.className = 'badge-member';
+      statusBadge.innerText = `✅ ${displayName}`;
+    }
+    if (av) {
+      av.classList.remove('avatar-guest');
+      const initials = (firstName ? firstName.substring(0, 2) : cleanEmail.substring(0, 2)).toUpperCase();
+      av.childNodes[0].nodeValue = initials;
+      av.title = `เข้าสู่ระบบเป็น ${cleanEmail} (คลิกเพื่อสลับผู้ใช้/ออกจากระบบ)`;
+    }
+    if (menuLoginBtn) menuLoginBtn.style.display = 'none';
+    if (menuRegisterBtn) menuRegisterBtn.style.display = 'none';
+    if (menuSwitchBtn) menuSwitchBtn.style.display = 'flex';
+    if (menuLogoutBtn) menuLogoutBtn.innerText = '🚪 ออกจากระบบ (Logout)';
+
+    if (mobAuthTitle) mobAuthTitle.innerText = 'สลับผู้ใช้งาน / ออกจากระบบ';
+    if (mobAuthSub) mobAuthSub.innerText = `บัญชี: ${cleanEmail}`;
   }
 }
 
-// ====== AUTHENTICATION ======
-function showAuthModal() { document.getElementById('auth-modal')?.classList.remove('hidden'); }
-function toggleAuthMode(event) {
-  if (event) event.preventDefault();
-  isRegisterMode = !isRegisterMode;
-  document.querySelectorAll('.register-only').forEach(el => el.style.display = isRegisterMode ? 'block' : 'none');
+// ====== AUTHENTICATION & MULTI-USER SWITCH ======
+function renderSavedAccounts() {
+  const section = document.getElementById('saved-accounts-section');
+  const list = document.getElementById('saved-accounts-list');
+  if (!section || !list) return;
+
+  const accounts = AGRI_STORAGE.getRecentAccounts ? AGRI_STORAGE.getRecentAccounts() : [];
+  if (!accounts || accounts.length === 0) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  list.innerHTML = accounts.map(acc => {
+    const isCurrent = acc.email.toLowerCase() === (currentLoggedInEmail || '').toLowerCase();
+    const label = escapeHtml(acc.firstName || acc.email);
+    return `
+      <div class="saved-account-chip ${isCurrent ? 'active' : ''}" onclick="quickSwitchTo('${escapeHtml(acc.email)}')" title="คลิกเพื่อสลับไปยังบัญชีนี้">
+        <span>👤 ${label}</span>
+        <span style="font-size:0.75rem; color:var(--slate-500);">(${escapeHtml(acc.email)})</span>
+        ${isCurrent ? '<span style="font-size:0.72rem; color:var(--emerald-700); font-weight:800;">[ปัจจุบัน]</span>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function quickSwitchTo(email) {
+  const emailInput = document.getElementById('login-email-input');
+  const passInput = document.getElementById('login-password-input');
+  if (emailInput) emailInput.value = email;
+  if (passInput) {
+    passInput.value = '';
+    passInput.focus();
+  }
+  showToast(`เลือกบัญชี ${email} เรียบร้อย กรุณาใส่รหัสผ่านเพื่อเข้าสู่ระบบ`, 'info');
+}
+
+function openLoginModal() {
+  isRegisterMode = false;
+  document.querySelectorAll('.register-only').forEach(el => el.style.display = 'none');
   const ti = document.getElementById('auth-modal-title');
+  const sub = document.getElementById('auth-modal-sub');
   const mb = document.getElementById('auth-main-btn');
   const tt = document.getElementById('auth-toggle-text');
   const tl = document.getElementById('auth-toggle-link');
-  if (isRegisterMode) {
-    if (ti) ti.innerText = 'ลงทะเบียนบัญชีสวนทุเรียนใหม่';
-    if (mb) mb.innerText = '📝 ยืนยันการสมัครสมาชิก';
-    if (tt) tt.innerText = 'มีบัญชีผู้ใช้งานอยู่แล้ว?';
-    if (tl) tl.innerText = 'เข้าสู่ระบบ';
-  } else {
-    if (ti) ti.innerText = 'ลงชื่อเข้าใช้งานระบบสวนทุเรียน';
-    if (mb) mb.innerText = '🔐 เข้าสู่ระบบ';
-    if (tt) tt.innerText = 'ยังไม่มีบัญชีใช่หรือไม่?';
-    if (tl) tl.innerText = 'สมัครสมาชิกใหม่';
-  }
+  if (ti) ti.innerText = 'ลงชื่อเข้าใช้งานระบบสวนทุเรียน';
+  if (sub) sub.innerText = 'เข้าสู่ระบบเพื่อซิงค์ข้อมูลสวนและสมุดบัญชีกับฐานข้อมูลคลาวด์ MongoDB Atlas';
+  if (mb) mb.innerText = '🔐 เข้าสู่ระบบ';
+  if (tt) tt.innerText = 'ยังไม่มีบัญชีใช่หรือไม่?';
+  if (tl) tl.innerText = 'สมัครสมาชิกใหม่';
+  renderSavedAccounts();
+  document.getElementById('signout-menu')?.classList.add('hidden');
+  document.getElementById('auth-modal')?.classList.remove('hidden');
+}
+
+function openRegisterModal() {
+  isRegisterMode = true;
+  document.querySelectorAll('.register-only').forEach(el => el.style.display = 'block');
+  const ti = document.getElementById('auth-modal-title');
+  const sub = document.getElementById('auth-modal-sub');
+  const mb = document.getElementById('auth-main-btn');
+  const tt = document.getElementById('auth-toggle-text');
+  const tl = document.getElementById('auth-toggle-link');
+  const savedSec = document.getElementById('saved-accounts-section');
+  if (savedSec) savedSec.style.display = 'none';
+  if (ti) ti.innerText = 'ลงทะเบียนบัญชีสวนทุเรียนใหม่';
+  if (sub) sub.innerText = 'สร้างบัญชีเพื่อจัดเก็บประวัติแปลงและบัญชีรายรับ-รายจ่ายของคุณบนคลาวด์';
+  if (mb) mb.innerText = '📝 ยืนยันการสมัครสมาชิก';
+  if (tt) tt.innerText = 'มีบัญชีผู้ใช้งานอยู่แล้ว?';
+  if (tl) tl.innerText = 'เข้าสู่ระบบ';
+  document.getElementById('signout-menu')?.classList.add('hidden');
+  document.getElementById('auth-modal')?.classList.remove('hidden');
+}
+
+function promptSwitchUser() {
+  document.getElementById('signout-menu')?.classList.add('hidden');
+  openLoginModal();
+  const ti = document.getElementById('auth-modal-title');
+  const sub = document.getElementById('auth-modal-sub');
+  if (ti) ti.innerText = '🔄 สลับบัญชีผู้ใช้งาน (Switch User)';
+  if (sub) sub.innerText = 'เลือกบัญชีที่เคยบันทึกไว้ หรือกรอกอีเมลใหม่เพื่อสลับบัญชี';
+}
+
+function closeAuthModal(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('auth-modal')?.classList.add('hidden');
+}
+
+function showAuthModal() { openLoginModal(); }
+
+function toggleAuthMode(event) {
+  if (event) event.preventDefault();
+  if (isRegisterMode) openLoginModal();
+  else openRegisterModal();
 }
 
 async function handleEmailAuthSubmit(event) {
@@ -256,16 +379,18 @@ async function handleEmailAuthSubmit(event) {
         farmName: document.getElementById('reg-farmname')?.value.trim() || ''
       };
       const r = await AGRI_STORAGE.register(payload);
-      showToast(r.message, 'success');
-      toggleAuthMode();
+      showToast(r.message || 'สมัครสมาชิกสำเร็จ!', 'success');
+      openLoginModal();
+      const loginEmail = document.getElementById('login-email-input');
+      if (loginEmail) loginEmail.value = email;
     } else {
       const r = await AGRI_STORAGE.login(email, password);
       currentLoggedInEmail = r.email;
       isGuestMode = false;
       AGRI_STORAGE.saveSession(r.email, false);
       document.getElementById('auth-modal')?.classList.add('hidden');
-      updateAvatarUI(r.email, r.firstName);
-      showToast('ยินดีต้อนรับ ' + (r.firstName || r.email), 'success');
+      updateAvatarUI(r.email, r.firstName, r.farmName);
+      showToast('ยินดีต้อนรับ ' + (r.firstName || r.email) + ' เข้าสู่ระบบเรียบร้อย', 'success');
       await loadUserData();
     }
   } catch (err) {
@@ -282,7 +407,7 @@ function handleGuestMode(event) {
   AGRI_STORAGE.saveSession('guest', true);
   document.getElementById('auth-modal')?.classList.add('hidden');
   updateAvatarUI('guest');
-  showToast('เข้าใช้งานโหมดสวนทั่วไปเรียบร้อย', 'success');
+  showToast('เข้าใช้งานในโหมดผู้เยี่ยมชม (Guest Mode) เรียบร้อย', 'success');
   loadUserData();
 }
 
@@ -293,15 +418,15 @@ function toggleSignOutMenu(event) {
 document.addEventListener('click', () => document.getElementById('signout-menu')?.classList.add('hidden'));
 
 function signOutUser() {
-  AGRI_STORAGE.clearSession();
-  fieldLogs = []; plantSurveys = []; accEntries = [];
-  currentLoggedInEmail = 'guest'; isGuestMode = false;
-  renderAllTables();
-  const av = document.getElementById('avatar-display');
-  if (av) av.childNodes[0].nodeValue = 'JD';
   document.getElementById('signout-menu')?.classList.add('hidden');
-  showAuthModal();
-  showToast('ออกจากระบบเรียบร้อยแล้ว', 'success');
+  const prevEmail = currentLoggedInEmail;
+  AGRI_STORAGE.clearSession();
+  currentLoggedInEmail = 'guest';
+  isGuestMode = true;
+  AGRI_STORAGE.saveSession('guest', true);
+  updateAvatarUI('guest');
+  loadUserData();
+  showToast(prevEmail !== 'guest' ? 'ออกจากระบบเรียบร้อยแล้ว — สลับเป็นโหมดผู้เยี่ยมชม' : 'ล้างแคชผู้เยี่ยมชมเรียบร้อยแล้ว', 'success');
 }
 
 // ====== DATA LOAD & SAVE (MONGODB ATLAS) ======
@@ -1695,13 +1820,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   hidePageLoader();
 
   const session = AGRI_STORAGE.getSession();
-  if (session.email) {
+  if (session.email && !session.isGuest && session.email !== 'guest') {
     currentLoggedInEmail = session.email;
-    isGuestMode = session.isGuest;
+    isGuestMode = false;
     document.getElementById('auth-modal')?.classList.add('hidden');
-    updateAvatarUI(session.email);
+    const recent = (AGRI_STORAGE.getRecentAccounts ? AGRI_STORAGE.getRecentAccounts() : []).find(a => a.email === session.email);
+    updateAvatarUI(session.email, recent?.firstName, recent?.farmName);
   } else {
-    // เปิดให้ใช้งานได้ทันทีในโหมดผู้ใช้งานทั่วไปโดยไม่บล็อกหน้าจอภาคสนาม
+    // เริ่มต้นในโหมดผู้เยี่ยมชม เพื่อให้ใช้งานภาคสนามได้ทันที และมีปุ่มเข้าสู่ระบบให้กดได้ตลอดเวลา
     currentLoggedInEmail = 'guest';
     isGuestMode = true;
     AGRI_STORAGE.saveSession('guest', true);

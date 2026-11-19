@@ -64,15 +64,25 @@
     <option value="น้ำมันดีเซลเครื่องสูบน้ำ"></option>
   </datalist>
 
-  <!-- หน้าต่างเข้าสู่ระบบ -->
-  <div id="auth-modal" class="auth-overlay hidden">
-    <div class="auth-card">
+  <!-- หน้าต่างเข้าสู่ระบบ / สลับบัญชีผู้ใช้งาน -->
+  <div id="auth-modal" class="auth-overlay hidden" onclick="closeAuthModal(event)">
+    <div class="auth-card" onclick="event.stopPropagation()">
+      <button type="button" class="modal-close-btn" onclick="closeAuthModal()" title="ปิดหน้าต่าง">✕</button>
+
       <div class="brand" style="justify-content:center; font-size:1.55rem; margin-bottom:10px;">
         <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
         AgriDash Durian Pro
       </div>
       <div class="auth-title" id="auth-modal-title">ลงชื่อเข้าใช้งานระบบสวนทุเรียน</div>
-      <div class="auth-subtitle">ข้อมูลสวนและสมุดบัญชีของคุณถูกจัดเก็บอย่างปลอดภัยบนฐานข้อมูลคลาวด์ MongoDB Atlas</div>
+      <div class="auth-subtitle" id="auth-modal-sub">เข้าสู่ระบบเพื่อซิงค์ข้อมูลสวนและสมุดบัญชีกับฐานข้อมูลคลาวด์ MongoDB Atlas</div>
+
+      <!-- บัญชีที่เคยเข้าใช้งานล่าสุด (Quick Switch User) -->
+      <div id="saved-accounts-section" style="display:none; margin-bottom:16px; padding:12px; background:var(--slate-50); border:1.5px dashed var(--slate-300); border-radius:14px; text-align:left;">
+        <div style="font-size:0.8rem; font-weight:800; color:var(--slate-700); margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+          🔄 <span>คลิกเพื่อสลับไปยังบัญชีที่เคยใช้งาน:</span>
+        </div>
+        <div id="saved-accounts-list" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+      </div>
 
       <div class="form-group register-only" style="display: none; text-align:left; margin-bottom: 12px;">
         <div style="display: flex; gap: 10px;">
@@ -116,8 +126,8 @@
         🔐 เข้าสู่ระบบ
       </button>
 
-      <button class="auth-btn-guest" onclick="handleGuestMode(event)">
-        🚀 ทดลองใช้งานทันที
+      <button type="button" class="auth-btn-guest" onclick="handleGuestMode(event)">
+        🚀 ใช้งานโหมดผู้เยี่ยมชม (Guest Mode)
       </button>
 
       <div style="margin-top: 14px; font-size: 0.88rem; color: var(--slate-600); text-align:center;">
@@ -143,6 +153,16 @@
     </div>
 
     <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+      <!-- ปุ่มสำหรับลงชื่อเข้าใช้เมื่ออยู่ใน Guest Mode -->
+      <button id="header-guest-login-btn" class="btn-header-login" onclick="openLoginModal()" title="ลงชื่อเข้าใช้งานบัญชีจริง">
+        🔑 เข้าสู่ระบบ
+      </button>
+
+      <!-- ป้ายสถานะผู้ใช้ / สลับบัญชี -->
+      <div id="user-status-pill" class="user-status-pill btn-desktop" onclick="toggleSignOutMenu(event)" title="คลิกเพื่อสลับผู้ใช้หรือจัดการบัญชี">
+        <span id="user-status-badge" class="badge-guest">👤 ผู้เยี่ยมชม</span>
+      </div>
+
       <button class="btn btn-outline" style="height:38px; width:38px; padding:0; display:none; align-items:center; justify-content:center; border-radius:10px;" id="mobile-more-btn" onclick="openMobileSheet()" aria-label="เมนูลัด" title="เมนูลัด">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="1.2"></circle>
@@ -153,11 +173,28 @@
       <span id="sync-indicator" class="sync-indicator btn-desktop">✅ ซิงค์แล้ว</span>
       <span class="status-dot online btn-desktop" id="status-dot"></span>
       <div id="status-cloud-text" style="font-size:0.78rem; font-weight:700; color:var(--emerald-700); display:none;" class="btn-desktop"></div>
-      <div class="user-avatar" id="avatar-display" style="cursor:pointer; position:relative;" onclick="toggleSignOutMenu(event)">
+
+      <!-- Avatar และเมนูสลับผู้ใช้ / ออกจากระบบ -->
+      <div class="user-avatar" id="avatar-display" style="cursor:pointer; position:relative;" onclick="toggleSignOutMenu(event)" title="จัดการบัญชี / สลับผู้ใช้งาน">
         JD
-        <div id="signout-menu" class="hidden" style="position:absolute; top:48px; right:0; background:white; border:1.5px solid var(--slate-200); box-shadow:var(--shadow-lg); border-radius:14px; padding:10px; min-width:190px; display:flex; flex-direction:column; gap:4px; z-index:1000;">
-          <div style="font-size:0.78rem; font-weight:700; color:var(--slate-600); padding:6px 10px; border-bottom:1px solid var(--slate-100); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:175px;" id="user-email-display">ผู้ใช้งานทั่วไป</div>
-          <button class="btn btn-outline" style="height:36px; font-size:0.86rem; width:100%; border:none; background:none; color:var(--rose-600); font-weight:800; text-align:left; justify-content:flex-start; padding:4px 10px; margin:0;" onclick="signOutUser()">🚪 ออกจากระบบ</button>
+        <div id="signout-menu" class="hidden user-menu-dropdown" onclick="event.stopPropagation()">
+          <div class="user-menu-header">
+            <div id="user-menu-title" class="user-menu-title">โหมดผู้เยี่ยมชม (Guest)</div>
+            <div id="user-email-display" class="user-menu-sub">ข้อมูลถูกบันทึกในเครื่อง & กองกลาง</div>
+          </div>
+          <button id="menu-login-btn" class="menu-action-btn menu-login" onclick="openLoginModal()">
+            🔑 ลงชื่อเข้าใช้งานจริง (Login)
+          </button>
+          <button id="menu-register-btn" class="menu-action-btn" onclick="openRegisterModal()">
+            📝 สมัครสมาชิกใหม่ (Register)
+          </button>
+          <button id="menu-switch-btn" class="menu-action-btn" onclick="promptSwitchUser()">
+            🔄 สลับผู้ใช้งาน (Switch User)
+          </button>
+          <div style="height:1px; background:var(--slate-100); margin:3px 0;"></div>
+          <button id="menu-logout-btn" class="menu-action-btn menu-logout" onclick="signOutUser()">
+            🚪 ออกจากระบบ (Logout)
+          </button>
         </div>
       </div>
     </div>
@@ -1307,6 +1344,13 @@
           <div>
             <span>ดูกราฟการเงิน</span>
             <div style="font-size:0.75rem; color:var(--slate-500); font-weight:600;">วิเคราะห์กำไร-ต้นทุน</div>
+          </div>
+        </button>
+        <button class="mobile-sheet-item" id="mob-sheet-auth-btn" onclick="openLoginModal(); closeMobileSheet();" style="border:1.5px solid var(--emerald-300); background:var(--emerald-50);">
+          <div class="sheet-icon" style="background:var(--emerald-200); color:var(--emerald-800);">🔑</div>
+          <div>
+            <span id="mob-sheet-auth-title" style="color:var(--emerald-900); font-weight:800;">เข้าสู่ระบบ / สลับบัญชี</span>
+            <div id="mob-sheet-auth-sub" style="font-size:0.75rem; color:var(--emerald-700); font-weight:600;">เชื่อมต่อ MongoDB หรือเปลี่ยนผู้ใช้</div>
           </div>
         </button>
       </div>

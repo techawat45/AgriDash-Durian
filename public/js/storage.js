@@ -43,13 +43,16 @@ const AGRI_STORAGE = (() => {
     ls.remove(SESSION_KEY_DATA);
   }
 
-  // ----- Offline data cache -----
-  function saveDataCache(data) {
+  // ----- Offline data cache (Keyed per user email for safe multi-user switching) -----
+  function saveDataCache(data, email = 'guest') {
+    const userKey = SESSION_KEY_DATA + '_' + (email || 'guest').toLowerCase();
+    ls.set(userKey, JSON.stringify(data));
     ls.set(SESSION_KEY_DATA, JSON.stringify(data));
   }
-  function getDataCache() {
+  function getDataCache(email = 'guest') {
     try {
-      const raw = ls.get(SESSION_KEY_DATA);
+      const userKey = SESSION_KEY_DATA + '_' + (email || 'guest').toLowerCase();
+      const raw = ls.get(userKey) || ls.get(SESSION_KEY_DATA);
       if (!raw) return { fieldLogs: [], plantSurveys: [], accEntries: [] };
       const parsed = JSON.parse(raw);
       return {
@@ -60,6 +63,33 @@ const AGRI_STORAGE = (() => {
     } catch(e) {
       return { fieldLogs: [], plantSurveys: [], accEntries: [] };
     }
+  }
+
+  // ----- Recent Accounts (for quick Switch User) -----
+  function getRecentAccounts() {
+    try {
+      const raw = ls.get('recent_accounts');
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+
+  function addRecentAccount(email, firstName = '', farmName = '') {
+    if (!email || email === 'guest') return;
+    try {
+      const clean = email.toLowerCase().trim();
+      let accounts = getRecentAccounts().filter(a => a.email.toLowerCase() !== clean);
+      accounts.unshift({ email: clean, firstName: firstName || clean.split('@')[0], farmName: farmName || 'สวนทุเรียน', lastLogin: new Date().toISOString() });
+      if (accounts.length > 5) accounts = accounts.slice(0, 5);
+      ls.set('recent_accounts', JSON.stringify(accounts));
+    } catch(e) {}
+  }
+
+  function removeRecentAccount(email) {
+    try {
+      const clean = (email || '').toLowerCase().trim();
+      const accounts = getRecentAccounts().filter(a => a.email.toLowerCase() !== clean);
+      ls.set('recent_accounts', JSON.stringify(accounts));
+    } catch(e) {}
   }
 
   // ----- Agro Measurements cache -----
@@ -88,33 +118,68 @@ const AGRI_STORAGE = (() => {
 
   // ----- Auth -----
   async function login(email, password) {
-    const r = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-      signal: AbortSignal.timeout(8000)
-    });
-    const json = await r.json();
-    if (!json.success) throw new Error(json.message || 'Login failed');
-    return json;
+    const cleanEmail = (email || '').toLowerCase().trim();
+    try {
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, password }),
+        signal: AbortSignal.timeout(8000)
+      });
+      const json = await r.json();
+      if (!json.success) throw new Error(json.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      addRecentAccount(json.email || cleanEmail, json.firstName, json.farmName);
+      return json;
+    } catch(e) {
+      // Offline fallback หรือโหมด Static Hosting (เช่น GitHub Pages)
+      if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('404') || e.message.includes('NetworkError') || e.name === 'AbortError')) {
+        const localAccounts = getRecentAccounts();
+        const found = localAccounts.find(a => a.email === cleanEmail);
+        const firstName = found ? found.firstName : cleanEmail.split('@')[0];
+        const farmName = found ? found.farmName : 'สวนทุเรียน';
+        addRecentAccount(cleanEmail, firstName, farmName);
+        return {
+          success: true,
+          email: cleanEmail,
+          firstName,
+          farmName,
+          message: 'เข้าสู่ระบบสำเร็จ (โหมดจำลอง / Offline Mode)'
+        };
+      }
+      throw e;
+    }
   }
 
   async function register(payload) {
-    const r = await fetch('/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000)
-    });
-    const json = await r.json();
-    if (!json.success) throw new Error(json.message || 'Register failed');
-    return json;
+    const cleanEmail = (payload.email || '').toLowerCase().trim();
+    try {
+      const r = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, email: cleanEmail }),
+        signal: AbortSignal.timeout(8000)
+      });
+      const json = await r.json();
+      if (!json.success) throw new Error(json.message || 'สมัครสมาชิกไม่สำเร็จ');
+      addRecentAccount(cleanEmail, payload.firstName, payload.farmName);
+      return json;
+    } catch(e) {
+      if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('404') || e.message.includes('NetworkError') || e.name === 'AbortError')) {
+        addRecentAccount(cleanEmail, payload.firstName, payload.farmName);
+        return {
+          success: true,
+          message: 'สมัครสมาชิกสำเร็จ (โหมดจำลอง / Offline Mode)'
+        };
+      }
+      throw e;
+    }
   }
 
   // ----- Fetch user data (with offline fallback — NEVER wipes existing cache) -----
   async function loadData(email) {
+    const cleanEmail = (email || 'guest').toLowerCase().trim();
     try {
-      const r = await fetch('/api/data?userEmail=' + encodeURIComponent(email), {
+      const r = await fetch('/api/data?userEmail=' + encodeURIComponent(cleanEmail), {
         signal: AbortSignal.timeout(8000)
       });
       if (!r.ok) throw new Error('Server returned ' + r.status);
@@ -125,28 +190,29 @@ const AGRI_STORAGE = (() => {
           plantSurveys: json.data.plantSurveys || [],
           accEntries: json.data.accEntries || []
         };
-        saveDataCache(data);
+        saveDataCache(data, cleanEmail);
         return { source: json.source, data };
       }
       throw new Error('Invalid server response');
     } catch(e) {
-      console.warn('[Storage] Backend unavailable, using cache:', e.message);
-      const cached = getDataCache();
+      console.warn('[Storage] Backend unavailable, using cache for ' + cleanEmail + ':', e.message);
+      const cached = getDataCache(cleanEmail);
       return { source: 'cache', data: cached, offline: true };
     }
   }
 
   // ----- Save data (always write cache first, then try backend) -----
   async function saveData(email, fieldLogs, plantSurveys, accEntries) {
-    // 1. Always update local cache immediately
-    saveDataCache({ fieldLogs, plantSurveys, accEntries });
+    const cleanEmail = (email || 'guest').toLowerCase().trim();
+    // 1. Always update local cache immediately (per user key)
+    saveDataCache({ fieldLogs, plantSurveys, accEntries }, cleanEmail);
 
     // 2. Try backend (non-blocking — don't throw on failure)
     try {
       const r = await fetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userEmail: email, fieldLogs, plantSurveys, accEntries }),
+        body: JSON.stringify({ userEmail: cleanEmail, fieldLogs, plantSurveys, accEntries }),
         signal: AbortSignal.timeout(8000)
       });
       if (!r.ok) throw new Error('Server returned ' + r.status);
@@ -160,14 +226,15 @@ const AGRI_STORAGE = (() => {
 
   // ----- Delete single item -----
   async function deleteItem(collection, id, email, currentData) {
+    const cleanEmail = (email || 'guest').toLowerCase().trim();
     // 1. Remove from local cache
     const updated = { ...currentData };
     updated[collection] = (updated[collection] || []).filter(item => item.id !== id);
-    saveDataCache(updated);
+    saveDataCache(updated, cleanEmail);
 
     // 2. Try backend delete
     try {
-      await fetch('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(email), {
+      await fetch('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(cleanEmail), {
         method: 'DELETE',
         signal: AbortSignal.timeout(5000)
       });
@@ -181,6 +248,7 @@ const AGRI_STORAGE = (() => {
     ls,
     saveSession, getSession, clearSession,
     saveDataCache, getDataCache,
+    getRecentAccounts, addRecentAccount, removeRecentAccount,
     saveAgroMeasurementsCache, getAgroMeasurementsCache,
     checkHealth, isBackendOnline,
     login, register,
