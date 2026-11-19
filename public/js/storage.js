@@ -65,6 +65,46 @@ const AGRI_STORAGE = (() => {
     }
   }
 
+  // ----- Safe Response Parser (Guards against HTML 404 responses on static hosting like GitHub Pages) -----
+  async function parseResponseSafely(r) {
+    if (!r) throw new Error('ไม่ได้รับการตอบกลับจากเซิร์ฟเวอร์');
+    const contentType = (r.headers && r.headers.get('content-type')) || '';
+    const isHtml = contentType.includes('text/html');
+    if (!r.ok || isHtml) {
+      let msg = `HTTP ${r.status}`;
+      try {
+        const text = await r.text();
+        if (text && text.trim().startsWith('{')) {
+          const parsed = JSON.parse(text);
+          if (parsed && parsed.message) msg = parsed.message;
+        }
+      } catch (e) {}
+      const err = new Error(msg);
+      err.status = r.status;
+      err.isHtml = isHtml;
+      throw err;
+    }
+    return await r.json();
+  }
+
+  // ----- Registered users in LocalStorage (for offline and static GitHub Pages hosting) -----
+  function getRegisteredUsers() {
+    try {
+      const raw = ls.get('registered_users');
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+
+  function saveRegisteredUser(user) {
+    if (!user || !user.email) return;
+    try {
+      const cleanEmail = user.email.toLowerCase().trim();
+      const list = getRegisteredUsers().filter(u => u.email.toLowerCase() !== cleanEmail);
+      list.push({ ...user, email: cleanEmail });
+      ls.set('registered_users', JSON.stringify(list));
+    } catch(e) {}
+  }
+
   // ----- Recent Accounts (for quick Switch User) -----
   function getRecentAccounts() {
     try {
@@ -106,9 +146,9 @@ const AGRI_STORAGE = (() => {
   async function checkHealth() {
     try {
       const r = await fetch('/api/health', { signal: AbortSignal.timeout(3000) });
-      const json = await r.json();
-      _backendOnline = json.success === true;
-      return json;
+      const json = await parseResponseSafely(r);
+      _backendOnline = json && json.success === true;
+      return json || { success: false, status: 'offline' };
     } catch(e) {
       _backendOnline = false;
       return { success: false, status: 'offline' };
@@ -116,7 +156,7 @@ const AGRI_STORAGE = (() => {
   }
   function isBackendOnline() { return _backendOnline; }
 
-  // ----- Auth -----
+  // ----- Auth (with automatic offline / GitHub Pages static fallback) -----
   async function login(email, password) {
     const cleanEmail = (email || '').toLowerCase().trim();
     try {
@@ -124,29 +164,55 @@ const AGRI_STORAGE = (() => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cleanEmail, password }),
-        signal: AbortSignal.timeout(8000)
+        signal: AbortSignal.timeout(4000)
       });
-      const json = await r.json();
+      const json = await parseResponseSafely(r);
       if (!json.success) throw new Error(json.message || 'เข้าสู่ระบบไม่สำเร็จ');
       addRecentAccount(json.email || cleanEmail, json.firstName, json.farmName);
+      saveRegisteredUser({ email: cleanEmail, password, firstName: json.firstName, farmName: json.farmName });
       return json;
     } catch(e) {
-      // Offline fallback หรือโหมด Static Hosting (เช่น GitHub Pages)
-      if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('404') || e.message.includes('NetworkError') || e.name === 'AbortError')) {
-        const localAccounts = getRecentAccounts();
-        const found = localAccounts.find(a => a.email === cleanEmail);
-        const firstName = found ? found.firstName : cleanEmail.split('@')[0];
-        const farmName = found ? found.farmName : 'สวนทุเรียน';
-        addRecentAccount(cleanEmail, firstName, farmName);
+      // หากเซิร์ฟเวอร์ส่งข้อความปฏิเสธรหัสผ่าน ให้แสดงข้อความนั้น
+      if (e.message && (e.message.includes('รหัสผ่านไม่ถูกต้อง') || e.message.includes('ไม่พบอีเมลนี้ในระบบ'))) {
+        throw e;
+      }
+
+      console.warn('[Storage] Backend auth unavailable or on static hosting, using local store:', e.message);
+
+      // โหมดออฟไลน์ / โฮสต์แบบสแตติก (GitHub Pages)
+      const localUsers = getRegisteredUsers();
+      const user = localUsers.find(u => u.email.toLowerCase() === cleanEmail);
+
+      if (user) {
+        if (user.password && user.password !== password) {
+          throw new Error('รหัสผ่านไม่ถูกต้อง');
+        }
+        addRecentAccount(user.email, user.firstName, user.farmName);
         return {
           success: true,
-          email: cleanEmail,
-          firstName,
-          farmName,
-          message: 'เข้าสู่ระบบสำเร็จ (โหมดจำลอง / Offline Mode)'
+          email: user.email,
+          firstName: user.firstName,
+          farmName: user.farmName,
+          message: 'เข้าสู่ระบบสำเร็จ (โหมดแคชในเครื่อง)'
         };
       }
-      throw e;
+
+      // หากยังไม่เคยบันทึกในเครื่อง สร้างบัญชีให้อัตโนมัติในโหมดสแตติก
+      const recentAccounts = getRecentAccounts();
+      const recent = recentAccounts.find(a => a.email.toLowerCase() === cleanEmail);
+      const firstName = recent ? recent.firstName : cleanEmail.split('@')[0];
+      const farmName = recent ? recent.farmName : 'สวนทุเรียน';
+
+      saveRegisteredUser({ email: cleanEmail, password, firstName, farmName });
+      addRecentAccount(cleanEmail, firstName, farmName);
+
+      return {
+        success: true,
+        email: cleanEmail,
+        firstName,
+        farmName,
+        message: 'เข้าสู่ระบบสำเร็จ (โหมดแคชในเครื่อง)'
+      };
     }
   }
 
@@ -157,21 +223,24 @@ const AGRI_STORAGE = (() => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, email: cleanEmail }),
-        signal: AbortSignal.timeout(8000)
+        signal: AbortSignal.timeout(4000)
       });
-      const json = await r.json();
+      const json = await parseResponseSafely(r);
       if (!json.success) throw new Error(json.message || 'สมัครสมาชิกไม่สำเร็จ');
       addRecentAccount(cleanEmail, payload.firstName, payload.farmName);
+      saveRegisteredUser({ ...payload, email: cleanEmail });
       return json;
     } catch(e) {
-      if (e.message && (e.message.includes('Failed to fetch') || e.message.includes('404') || e.message.includes('NetworkError') || e.name === 'AbortError')) {
-        addRecentAccount(cleanEmail, payload.firstName, payload.farmName);
-        return {
-          success: true,
-          message: 'สมัครสมาชิกสำเร็จ (โหมดจำลอง / Offline Mode)'
-        };
+      if (e.message && e.message.includes('อีเมลนี้ถูกสมัครใช้งานแล้ว')) {
+        throw e;
       }
-      throw e;
+      console.warn('[Storage] Backend register unavailable or on static host, saving locally:', e.message);
+      saveRegisteredUser({ ...payload, email: cleanEmail });
+      addRecentAccount(cleanEmail, payload.firstName, payload.farmName);
+      return {
+        success: true,
+        message: 'สมัครสมาชิกสำเร็จ (โหมดแคชในเครื่อง)!'
+      };
     }
   }
 
@@ -180,11 +249,10 @@ const AGRI_STORAGE = (() => {
     const cleanEmail = (email || 'guest').toLowerCase().trim();
     try {
       const r = await fetch('/api/data?userEmail=' + encodeURIComponent(cleanEmail), {
-        signal: AbortSignal.timeout(8000)
+        signal: AbortSignal.timeout(4000)
       });
-      if (!r.ok) throw new Error('Server returned ' + r.status);
-      const json = await r.json();
-      if (json.success && json.data) {
+      const json = await parseResponseSafely(r);
+      if (json && json.success && json.data) {
         const data = {
           fieldLogs: json.data.fieldLogs || [],
           plantSurveys: json.data.plantSurveys || [],
@@ -213,10 +281,9 @@ const AGRI_STORAGE = (() => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userEmail: cleanEmail, fieldLogs, plantSurveys, accEntries }),
-        signal: AbortSignal.timeout(8000)
+        signal: AbortSignal.timeout(4000)
       });
-      if (!r.ok) throw new Error('Server returned ' + r.status);
-      const json = await r.json();
+      const json = await parseResponseSafely(r);
       return { success: true, synced: true, message: json.message };
     } catch(e) {
       console.warn('[Storage] Offline — saved to cache only:', e.message);
@@ -234,10 +301,11 @@ const AGRI_STORAGE = (() => {
 
     // 2. Try backend delete
     try {
-      await fetch('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(cleanEmail), {
+      const r = await fetch('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(cleanEmail), {
         method: 'DELETE',
-        signal: AbortSignal.timeout(5000)
+        signal: AbortSignal.timeout(4000)
       });
+      await parseResponseSafely(r);
     } catch(e) {
       console.warn('[Storage] Delete offline — only removed from cache:', e.message);
     }
@@ -246,8 +314,10 @@ const AGRI_STORAGE = (() => {
 
   return {
     ls,
+    parseResponseSafely,
     saveSession, getSession, clearSession,
     saveDataCache, getDataCache,
+    getRegisteredUsers, saveRegisteredUser,
     getRecentAccounts, addRecentAccount, removeRecentAccount,
     saveAgroMeasurementsCache, getAgroMeasurementsCache,
     checkHealth, isBackendOnline,

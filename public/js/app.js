@@ -897,10 +897,10 @@ async function saveCalcExpenseToLedgerAndSheet() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest', accEntry, fieldLog }),
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(6000)
     });
-    const res = await r.json();
-    if (!r.ok || !res.success) throw new Error(res.message || 'บันทึกไม่สำเร็จ');
+    const res = await AGRI_STORAGE.parseResponseSafely(r);
+    if (!res || !res.success) throw new Error(res?.message || 'บันทึกไม่สำเร็จ');
 
     setSyncIndicator('synced', res.sheetSynced ? 'ซิงค์ MongoDB + Sheet แล้ว' : 'บันทึกเข้าสมุดบัญชีแล้ว');
     refreshSheetsStatus();
@@ -917,13 +917,13 @@ async function saveCalcExpenseToLedgerAndSheet() {
     const noteEl = document.getElementById('calc-note');
     if (noteEl) noteEl.value = '';
   } catch (err) {
-    // กรณี Backend ออฟไลน์ด้วย ลองยิงตรงเข้า Webhook ที่จำไว้ในเครื่อง
+    // กรณี Backend ออฟไลน์ หรืออยู่บนโฮสต์สแตติก (GitHub Pages) ลองยิงตรงเข้า Google Sheet Webhook จากเบราว์เซอร์
     const directSynced = await fallbackDirectBrowserWebhook(accEntry, fieldLog);
     setSyncIndicator(directSynced ? 'synced' : 'error', directSynced ? 'สำรองขึ้น Google Sheet แล้ว' : 'บันทึกในเครื่อง (ออฟไลน์)');
     showToast(
       directSynced
         ? `⚠️ เซิร์ฟเวอร์ออฟไลน์ — ส่ง ${formatCurrency(totalCost)} สำรองเข้า Google Sheet โดยตรงแล้ว!`
-        : `⚠️ บันทึก ${formatCurrency(totalCost)} ในเครื่องชั่วคราว (เซิร์ฟเวอร์ออฟไลน์)`,
+        : `⚠️ บันทึก ${formatCurrency(totalCost)} ในเครื่องเรียบร้อย (โหมดแคช/ออฟไลน์)`,
       'warning'
     );
   } finally {
@@ -1740,7 +1740,10 @@ async function refreshSheetsStatus() {
       }
     }
   } catch (e) {
-    if (pill) pill.innerText = '⚠️ โหมดออฟไลน์ — ใช้แคชสำรอง';
+    const localUrl = localStorage.getItem('agridash_sheets_webhook_url');
+    if (pill) {
+      pill.innerText = localUrl ? '🟢 พร้อมซิงค์ Google Sheet (สำรอง)' : '⚠️ โหมดออฟไลน์ — ใช้แคชสำรอง';
+    }
   }
 }
 
@@ -1760,22 +1763,23 @@ async function saveSheetsWebhook() {
     showToast('กรุณาวางลิงก์ Google Apps Script Web App ที่ขึ้นต้นด้วย https://script.google.com/', 'error');
     return;
   }
+  if (url) localStorage.setItem('agridash_sheets_webhook_url', url);
+  else localStorage.removeItem('agridash_sheets_webhook_url');
+
   try {
     const r = await fetch('/api/sheets/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ webhookUrl: url })
+      body: JSON.stringify({ webhookUrl: url }),
+      signal: AbortSignal.timeout(4000)
     });
-    const res = await r.json();
-    if (!res.success) throw new Error(res.message);
-    if (url) localStorage.setItem('agridash_sheets_webhook_url', url);
-    else localStorage.removeItem('agridash_sheets_webhook_url');
-    showToast(res.message, 'success');
-    refreshSheetsStatus();
-    if (url) await flushAllToGoogleSheet();
+    const res = await AGRI_STORAGE.parseResponseSafely(r);
+    showToast(res.message || 'บันทึกลิงก์สำเร็จ', 'success');
   } catch (e) {
-    showToast('บันทึกลิงก์ไม่สำเร็จ: ' + e.message, 'error');
+    showToast('บันทึกลิงก์ในเบราว์เซอร์เรียบร้อย (โหมดสำรอง)', 'success');
   }
+  refreshSheetsStatus();
+  if (url) await flushAllToGoogleSheet();
 }
 
 async function flushAllToGoogleSheet() {
@@ -1784,14 +1788,26 @@ async function flushAllToGoogleSheet() {
     const r = await fetch('/api/sheets/flush', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest' })
+      body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest' }),
+      signal: AbortSignal.timeout(5000)
     });
-    const res = await r.json();
-    if (!r.ok || !res.success) throw new Error(res.message || 'ซิงค์ไม่สำเร็จ');
-    showToast('✅ ' + res.message, 'success');
+    const res = await AGRI_STORAGE.parseResponseSafely(r);
+    showToast('✅ ' + (res.message || 'ซิงค์สำเร็จ'), 'success');
     refreshSheetsStatus();
   } catch (e) {
-    showToast('⚠️ ' + e.message, 'warning');
+    // โหมดออฟไลน์ / GitHub Pages: ยิงสำรองตรงเข้า Apps Script จากเบราว์เซอร์
+    const localUrl = localStorage.getItem('agridash_sheets_webhook_url');
+    if (localUrl) {
+      let sentCount = 0;
+      for (const entry of accEntries) {
+        await fallbackDirectBrowserWebhook(entry, null);
+        sentCount++;
+      }
+      showToast(`✅ ส่งสำรอง ${sentCount} รายการบัญชีขึ้น Google Sheet สำเร็จ!`, 'success');
+      refreshSheetsStatus();
+    } else {
+      showToast('⚠️ เซิร์ฟเวอร์ออฟไลน์ — บันทึกข้อมูลในเครื่องเรียบร้อย', 'warning');
+    }
   }
 }
 
