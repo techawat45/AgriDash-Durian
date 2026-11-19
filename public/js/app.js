@@ -919,7 +919,7 @@ async function saveCalcExpenseToLedgerAndSheet() {
   setSyncIndicator('syncing', 'กำลังส่งเข้าสมุดบัญชีและ Google Sheet...');
 
   try {
-    const r = await fetch('/api/ledger/calc-expense', {
+    const r = await fetch(AGRI_STORAGE.apiUrl('/api/ledger/calc-expense'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest', accEntry, fieldLog }),
@@ -1666,13 +1666,14 @@ const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
 
 async function syncSingleEntryToSheet({ accEntry = null, fieldLog = null }) {
   try {
-    const r = await fetch('/api/sheets/sync', {
+    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/sync'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest', accEntry, fieldLog }),
       signal: AbortSignal.timeout(8000)
     });
-    if (r.ok) refreshSheetsStatus();
+    const res = await AGRI_STORAGE.parseResponseSafely(r);
+    if (res && res.success) refreshSheetsStatus();
   } catch (e) {
     await fallbackDirectBrowserWebhook(accEntry, fieldLog);
   }
@@ -1735,9 +1736,9 @@ async function refreshSheetsStatus() {
   const directLink = document.getElementById('sheets-direct-link');
   const inputEl = document.getElementById('sheets-webhook-input');
   try {
-    const r = await fetch('/api/sheets/config', { signal: AbortSignal.timeout(5000) });
-    const cfg = await r.json();
-    if (!cfg.success) return;
+    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/config'), { signal: AbortSignal.timeout(5000) });
+    const cfg = await AGRI_STORAGE.parseResponseSafely(r);
+    if (!cfg || !cfg.success) return;
 
     if (cfg.webhookUrl) {
       localStorage.setItem('agridash_sheets_webhook_url', cfg.webhookUrl);
@@ -1793,7 +1794,7 @@ async function saveSheetsWebhook() {
   else localStorage.removeItem('agridash_sheets_webhook_url');
 
   try {
-    const r = await fetch('/api/sheets/config', {
+    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/config'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ webhookUrl: url }),
@@ -1811,7 +1812,7 @@ async function saveSheetsWebhook() {
 async function flushAllToGoogleSheet() {
   try {
     showToast('🔄 กำลังซิงค์ข้อมูลทั้งหมดขึ้น Google Sheet...', 'success');
-    const r = await fetch('/api/sheets/flush', {
+    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/flush'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest' }),
