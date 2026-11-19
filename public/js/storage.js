@@ -26,6 +26,21 @@ const AGRI_STORAGE = (() => {
   const SESSION_KEY_EMAIL = 'session_email';
   const SESSION_KEY_GUEST = 'session_guest';
   const SESSION_KEY_DATA  = 'session_data';
+  const API_BASE_KEY      = 'custom_backend_url';
+
+  function getApiBaseUrl() {
+    return (ls.get(API_BASE_KEY) || '').trim().replace(/\/+$/, '');
+  }
+  function setApiBaseUrl(url) {
+    if (!url) ls.remove(API_BASE_KEY);
+    else ls.set(API_BASE_KEY, url.trim().replace(/\/+$/, ''));
+  }
+  function apiUrl(endpoint) {
+    const base = getApiBaseUrl();
+    if (!base) return endpoint;
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : ('/' + endpoint);
+    return base + cleanEndpoint;
+  }
 
   function saveSession(email, isGuest) {
     ls.set(SESSION_KEY_EMAIL, email);
@@ -145,7 +160,7 @@ const AGRI_STORAGE = (() => {
   let _backendOnline = null;
   async function checkHealth() {
     try {
-      const r = await fetch('/api/health', { signal: AbortSignal.timeout(3000) });
+      const r = await fetch(apiUrl('/api/health'), { signal: AbortSignal.timeout(3000) });
       const json = await parseResponseSafely(r);
       _backendOnline = json && json.success === true;
       return json || { success: false, status: 'offline' };
@@ -160,7 +175,7 @@ const AGRI_STORAGE = (() => {
   async function login(email, password) {
     const cleanEmail = (email || '').toLowerCase().trim();
     try {
-      const r = await fetch('/api/auth/login', {
+      const r = await fetch(apiUrl('/api/auth/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: cleanEmail, password }),
@@ -219,7 +234,7 @@ const AGRI_STORAGE = (() => {
   async function register(payload) {
     const cleanEmail = (payload.email || '').toLowerCase().trim();
     try {
-      const r = await fetch('/api/auth/register', {
+      const r = await fetch(apiUrl('/api/auth/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...payload, email: cleanEmail }),
@@ -248,7 +263,7 @@ const AGRI_STORAGE = (() => {
   async function loadData(email) {
     const cleanEmail = (email || 'guest').toLowerCase().trim();
     try {
-      const r = await fetch('/api/data?userEmail=' + encodeURIComponent(cleanEmail), {
+      const r = await fetch(apiUrl('/api/data?userEmail=' + encodeURIComponent(cleanEmail)), {
         signal: AbortSignal.timeout(4000)
       });
       const json = await parseResponseSafely(r);
@@ -277,7 +292,7 @@ const AGRI_STORAGE = (() => {
 
     // 2. Try backend (non-blocking — don't throw on failure)
     try {
-      const r = await fetch('/api/data', {
+      const r = await fetch(apiUrl('/api/data'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userEmail: cleanEmail, fieldLogs, plantSurveys, accEntries }),
@@ -301,7 +316,7 @@ const AGRI_STORAGE = (() => {
 
     // 2. Try backend delete
     try {
-      const r = await fetch('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(cleanEmail), {
+      const r = await fetch(apiUrl('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(cleanEmail)), {
         method: 'DELETE',
         signal: AbortSignal.timeout(4000)
       });
@@ -315,6 +330,7 @@ const AGRI_STORAGE = (() => {
   return {
     ls,
     parseResponseSafely,
+    apiUrl, getApiBaseUrl, setApiBaseUrl,
     saveSession, getSession, clearSession,
     saveDataCache, getDataCache,
     getRegisteredUsers, saveRegisteredUser,

@@ -178,18 +178,44 @@ function updateConnectionUI(health) {
   const dot = document.getElementById('status-dot');
   const ct = document.getElementById('status-cloud-text');
   if (!bar) return;
+
+  if (sessionStorage.getItem('agri_hide_offline_banner') === '1') {
+    bar.classList.add('hidden');
+  }
+
   if (!health || !health.success) {
-    bar.className = 'offline-banner';
-    bar.innerHTML = '⚠️ โหมดออฟไลน์ — ข้อมูลถูกสำรองไว้ในเครื่องอัตโนมัติ';
-    bar.classList.remove('hidden');
     if (dot) dot.className = 'status-dot offline';
-    if (ct) ct.innerText = 'โหมดออฟไลน์';
+    const isGhPages = window.location.hostname.includes('github.io');
+    if (ct) {
+      ct.innerText = isGhPages ? 'GitHub Pages (แคชในเครื่อง)' : 'โหมดในเครื่อง';
+      ct.style.display = 'block';
+    }
+
+    if (sessionStorage.getItem('agri_hide_offline_banner') !== '1') {
+      bar.className = 'offline-banner';
+      const userTag = (!isGuestMode && currentLoggedInEmail !== 'guest')
+        ? `👤 บัญชี: <strong>${escapeHtml(currentLoggedInEmail)}</strong>`
+        : '👤 โหมดผู้เยี่ยมชม';
+
+      bar.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:0.86rem; padding: 2px 0;">
+          <span>ℹ️ ${userTag} — ${isGhPages ? 'เปิดใช้งานผ่าน GitHub Pages (ข้อมูลจัดเก็บในเครื่องอย่างปลอดภัย & พร้อมสำรอง Google Sheet)' : 'โหมดออฟไลน์ — ข้อมูลถูกจัดเก็บสำรองไว้ในเครื่อง'}</span>
+          <button type="button" onclick="dismissOfflineBanner()" style="background:rgba(0,0,0,0.08); border:none; border-radius:6px; color:inherit; font-weight:800; cursor:pointer; padding:3px 10px; font-size:0.82rem;" title="ปิดแถบแจ้งเตือนนี้">✕ ปิดแถบนี้</button>
+        </div>
+      `;
+      bar.classList.remove('hidden');
+    }
   } else {
     bar.classList.add('hidden');
     if (dot) dot.className = 'status-dot online';
-    const mode = health.mode === 'mongodb_atlas' ? 'MongoDB คลาวด์' : 'ฐานข้อมูลเครื่อง';
+    const mode = health.mode === 'mongodb_atlas' ? 'MongoDB Atlas คลาวด์' : 'ฐานข้อมูลเครื่อง';
     if (ct) { ct.innerText = '🟢 ' + mode; ct.style.display = 'block'; }
   }
+}
+
+function dismissOfflineBanner() {
+  sessionStorage.setItem('agri_hide_offline_banner', '1');
+  document.getElementById('connection-status-bar')?.classList.add('hidden');
 }
 
 function hidePageLoader() {
