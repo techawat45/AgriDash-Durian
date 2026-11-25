@@ -75,7 +75,7 @@ const AGRI_STORAGE = (() => {
     const token = getToken();
     if (token) headers.Authorization = 'Bearer ' + token;
     const r = await fetch(apiUrl(endpoint), { ...opts, headers });
-    if (r.status === 401 && token && typeof window !== 'undefined') {
+    if (r.status === 401 && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('agri-auth-expired'));
     }
     return r;

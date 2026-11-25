@@ -421,6 +421,7 @@ async function handleEmailAuthSubmit(event) {
       if (loginEmail) loginEmail.value = email;
     } else {
       const r = await AGRI_STORAGE.login(email, password);
+      _authPromptShown = false;
       currentLoggedInEmail = r.email;
       isGuestMode = false;
       AGRI_STORAGE.saveSession(r.email, false);
@@ -1750,11 +1751,16 @@ async function copyAppsScriptCode() {
 }
 
 // ====== SESSION EXPIRY HANDLER ======
+let _authPromptShown = false;
 window.addEventListener('agri-auth-expired', () => {
   AGRI_STORAGE.setToken('');
-  if (!isGuestMode && currentLoggedInEmail !== 'guest') {
-    showToast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้งเพื่อซิงค์ข้อมูลคลาวด์', 'warning');
+  if (!isGuestMode && currentLoggedInEmail && currentLoggedInEmail !== 'guest' && !_authPromptShown) {
+    _authPromptShown = true;
+    showToast('กรุณายืนยันรหัสผ่านอีกครั้งเพื่อเชื่อมต่อฐานข้อมูลคลาวด์', 'warning');
     openLoginModal();
+    const emailEl = document.getElementById('login-email-input');
+    if (emailEl && !emailEl.value) emailEl.value = currentLoggedInEmail;
+    document.getElementById('login-password-input')?.focus();
   }
 });
 
