@@ -51,6 +51,54 @@ const AGRI_STORAGE = (() => {
     return getApiBaseUrl() ? cloudMs : localMs;
   }
 
+  // ----- Session token (ออกโดยเซิร์ฟเวอร์ตอนเข้าสู่ระบบ / เข้าเป็นผู้เยี่ยมชม) -----
+  const TOKEN_KEY  = 'auth_token';
+  const DEVICE_KEY = 'device_id';
+
+  function getToken() { return ls.get(TOKEN_KEY) || ''; }
+  function setToken(t) { if (t) ls.set(TOKEN_KEY, t); else ls.remove(TOKEN_KEY); }
+  function getDeviceId() {
+    let id = ls.get(DEVICE_KEY);
+    if (!id) {
+      const raw = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID().replace(/-/g, '')
+        : (Math.random().toString(36).slice(2) + Date.now().toString(36));
+      id = raw.replace(/[^A-Za-z0-9]/g, '').slice(0, 32);
+      ls.set(DEVICE_KEY, id);
+    }
+    return id;
+  }
+
+  /** เรียก API พร้อมแนบ token — หากเซิร์ฟเวอร์ปฏิเสธ (หมดอายุ) จะส่งสัญญาณให้หน้าเว็บจัดการ */
+  async function authFetch(endpoint, opts = {}) {
+    const headers = { ...(opts.headers || {}) };
+    const token = getToken();
+    if (token) headers.Authorization = 'Bearer ' + token;
+    const r = await fetch(apiUrl(endpoint), { ...opts, headers });
+    if (r.status === 401 && token && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('agri-auth-expired'));
+    }
+    return r;
+  }
+
+  /** ผู้เยี่ยมชมที่ยังไม่มี token → ขอ token แยกรายเครื่องจากเซิร์ฟเวอร์ */
+  async function ensureToken() {
+    if (getToken()) return getToken();
+    const s = getSession();
+    if (s.email && !s.isGuest && s.email !== 'guest') return '';
+    try {
+      const r = await fetch(apiUrl('/api/auth/guest'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deviceId: getDeviceId() }),
+        signal: AbortSignal.timeout(getTimeoutMs(5000, 25000))
+      });
+      const j = await parseResponseSafely(r);
+      if (j && j.success && j.token) { setToken(j.token); return j.token; }
+    } catch (e) { /* ออฟไลน์/โฮสต์สแตติก: ใช้ข้อมูลในเครื่องต่อไป */ }
+    return '';
+  }
+
   function saveSession(email, isGuest) {
     ls.set(SESSION_KEY_EMAIL, email);
     ls.set(SESSION_KEY_GUEST, isGuest ? '1' : '0');
@@ -65,6 +113,7 @@ const AGRI_STORAGE = (() => {
     ls.remove(SESSION_KEY_EMAIL);
     ls.remove(SESSION_KEY_GUEST);
     ls.remove(SESSION_KEY_DATA);
+    ls.remove(TOKEN_KEY);
   }
 
   // ----- Offline data cache (Keyed per user email for safe multi-user switching) -----
@@ -192,6 +241,7 @@ const AGRI_STORAGE = (() => {
       });
       const json = await parseResponseSafely(r);
       if (!json.success) throw new Error(json.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      setToken(json.token || '');
       addRecentAccount(json.email || cleanEmail, json.firstName, json.farmName);
       saveRegisteredUser({ email: cleanEmail, password, firstName: json.firstName, farmName: json.farmName });
       return json;
@@ -205,6 +255,7 @@ const AGRI_STORAGE = (() => {
       }
 
       console.warn('[Storage] Backend auth unavailable, using local store:', e.message);
+      setToken(''); // ออฟไลน์: ห้ามใช้ token ของบัญชีก่อนหน้ากับบัญชีนี้
 
       // โหมดออฟไลน์ / โฮสต์แบบสแตติก (GitHub Pages)
       const localUsers = getRegisteredUsers();
@@ -278,7 +329,7 @@ const AGRI_STORAGE = (() => {
   async function loadData(email) {
     const cleanEmail = (email || 'guest').toLowerCase().trim();
     try {
-      const r = await fetch(apiUrl('/api/data?userEmail=' + encodeURIComponent(cleanEmail)), {
+      const r = await authFetch('/api/data?userEmail=' + encodeURIComponent(cleanEmail), {
         signal: AbortSignal.timeout(getTimeoutMs(5000, 25000))
       });
       const json = await parseResponseSafely(r);
@@ -307,7 +358,7 @@ const AGRI_STORAGE = (() => {
 
     // 2. Try backend (non-blocking — don't throw on failure)
     try {
-      const r = await fetch(apiUrl('/api/data'), {
+      const r = await authFetch('/api/data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userEmail: cleanEmail, fieldLogs, plantSurveys, accEntries }),
@@ -331,7 +382,7 @@ const AGRI_STORAGE = (() => {
 
     // 2. Try backend delete
     try {
-      const r = await fetch(apiUrl('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(cleanEmail)), {
+      const r = await authFetch('/api/data/' + collection + '/' + id + '?userEmail=' + encodeURIComponent(cleanEmail), {
         method: 'DELETE',
         signal: AbortSignal.timeout(4000)
       });
@@ -345,7 +396,8 @@ const AGRI_STORAGE = (() => {
   return {
     ls,
     parseResponseSafely,
-    apiUrl, getApiBaseUrl, setApiBaseUrl,
+    apiUrl, getApiBaseUrl, setApiBaseUrl, getTimeoutMs,
+    getToken, setToken, getDeviceId, authFetch, ensureToken,
     saveSession, getSession, clearSession,
     saveDataCache, getDataCache,
     getRegisteredUsers, saveRegisteredUser,

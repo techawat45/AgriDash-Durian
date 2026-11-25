@@ -15,6 +15,9 @@ const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 const mongoose = require("mongoose");
+const { issueToken, requireAuth, isValidGuestDevice } = require("./lib/auth");
+const { makeCrudRouter } = require("./routes/crud");
+const { makeErpRouter } = require("./routes/erp");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -45,18 +48,28 @@ function hashPassword(password, salt) {
   return crypto.pbkdf2Sync(password, salt, 1000, 64, "sha512").toString("hex");
 }
 
+// ฟิลด์เชื่อมโยงสวน/แปลง (ใหม่) — คง plot (ข้อความ) ไว้เป็นป้ายชื่อ ณ เวลาบันทึก รองรับข้อมูลเดิม
+const linkFields = {
+  orchardId: { type: String, default: "", index: true },
+  plotId: { type: String, default: "", index: true },
+  refType: { type: String, default: "" },
+  refId: { type: String, default: "" }
+};
+
 const FieldLogSchema = new mongoose.Schema({
   id: { type: String, required: true },
   userEmail: { type: String, index: true, default: "guest" },
   date: String, plot: String, activity: String, detail: String,
-  cost: { type: Number, default: 0 }
+  cost: { type: Number, default: 0 },
+  ...linkFields
 }, { timestamps: true });
 
 const PlantSurveySchema = new mongoose.Schema({
   id: { type: String, required: true },
   userEmail: { type: String, index: true, default: "guest" },
   date: String, plot: String, stage: String, leafPest: String,
-  trunk: String, recommendation: String
+  trunk: String, recommendation: String,
+  ...linkFields
 }, { timestamps: true });
 
 const AccEntrySchema = new mongoose.Schema({
@@ -66,12 +79,16 @@ const AccEntrySchema = new mongoose.Schema({
   type: { type: String, enum: ["income", "expense"] },
   plot: { type: String, default: "รวมทุกแปลง" },
   category: String, detail: String,
-  amount: { type: Number, default: 0 }
+  amount: { type: Number, default: 0 },
+  ...linkFields
 }, { timestamps: true });
 
 const FieldLogModel = mongoose.model("FieldLog", FieldLogSchema);
 const PlantSurveyModel = mongoose.model("PlantSurvey", PlantSurveySchema);
 const AccEntryModel = mongoose.model("AccEntry", AccEntrySchema);
+
+const erpModels = require("./models")(mongoose);
+const { Orchard: OrchardModel, Plot: PlotModel, Tree: TreeModel } = erpModels;
 
 const AppConfigSchema = new mongoose.Schema({
   key: { type: String, unique: true, required: true },
@@ -297,15 +314,97 @@ async function postToGoogleSheetWebhook(sheetName, rows, itemIds = []) {
   }
 }
 
+// ทุกเส้นทางข้อมูลต้องแนบ token — ระบบกำหนดเจ้าของข้อมูลจาก token เท่านั้น (ไม่เชื่อ userEmail จากไคลเอนต์)
 function validateUserEmail(req, res, next) {
-  const bodyEmail = req.body && req.body.userEmail;
-  const queryEmail = req.query && req.query.userEmail;
-  const email = (bodyEmail || queryEmail || "guest").toLowerCase().trim();
-  if (email !== "guest" && !email.includes("@")) {
-    return res.status(400).json({ success: false, message: "userEmail invalid" });
-  }
-  next();
+  return requireAuth(req, res, () => {
+    if (!req.body || typeof req.body !== "object") req.body = {};
+    req.body.userEmail = req.userEmail;
+    next();
+  });
 }
+
+// ----- เส้นทางธุรกรรมเชื่อมโยงข้ามโมดูล (คลัง, พ่นยา, แรงงาน, ผลผลิต, สถานีอากาศ) -----
+const syncSheetHelper = async (userEmail, payload = {}) => {
+  if (payload.accEntry) {
+    await postToGoogleSheetWebhook("สมุดบัญชี", [buildAccSheetRow(payload.accEntry, userEmail)], [payload.accEntry.id]);
+  }
+  if (payload.fieldLog) {
+    await postToGoogleSheetWebhook("งานแปลงและคำนวณปุ๋ย", [buildFieldSheetRow(payload.fieldLog, userEmail)], [payload.fieldLog.id]);
+  }
+  if (payload.plantSurvey) {
+    await postToGoogleSheetWebhook("สำรวจสุขภาพต้น", [buildPlantSurveySheetRow(payload.plantSurvey, userEmail)], [payload.plantSurvey.id]);
+  }
+};
+
+app.use("/api", makeErpRouter({
+  auth: requireAuth,
+  ready: () => isMongoConnected,
+  models: erpModels,
+  FieldLogModel,
+  PlantSurveyModel,
+  AccEntryModel,
+  syncSheetHelper
+}));
+
+// ----- สวน / แปลง / ต้น และคอลเลกชัน ERP ทั้งหมด (CRUD ทั่วไป) -----
+const crudCtx = { auth: requireAuth, ready: () => isMongoConnected };
+app.use("/api/orchards", makeCrudRouter(OrchardModel, {
+  ...crudCtx,
+  required: ["name"],
+  cascade: async (userEmail, orchardId, hard) => {
+    const filter = { userEmail, orchardId };
+    if (hard) { await PlotModel.deleteMany(filter); await TreeModel.deleteMany(filter); }
+    else {
+      const now = new Date();
+      await PlotModel.updateMany(filter, { $set: { deletedAt: now } });
+      await TreeModel.updateMany(filter, { $set: { deletedAt: now } });
+    }
+  }
+}));
+app.use("/api/plots", makeCrudRouter(PlotModel, {
+  ...crudCtx,
+  required: ["name", "orchardId"],
+  cascade: async (userEmail, plotId, hard) => {
+    const filter = { userEmail, plotId };
+    if (hard) await TreeModel.deleteMany(filter);
+    else await TreeModel.updateMany(filter, { $set: { deletedAt: new Date() } });
+  }
+}));
+app.use("/api/trees", makeCrudRouter(TreeModel, {
+  ...crudCtx,
+  required: ["orchardId", "plotId"],
+  normalize: (doc) => {
+    const out = { ...doc };
+    const lat = parseFloat(out.lat);
+    const lng = parseFloat(out.lng);
+    if (Number.isFinite(lat) && Number.isFinite(lng)) {
+      out.lat = lat;
+      out.lng = lng;
+      out.location = { type: "Point", coordinates: [lng, lat] };
+    } else if (out.location && out.location.type === "Point" && Array.isArray(out.location.coordinates) && out.location.coordinates.length === 2) {
+      out.lng = Number(out.location.coordinates[0]);
+      out.lat = Number(out.location.coordinates[1]);
+    } else {
+      delete out.location;
+    }
+    return out;
+  }
+}));
+app.use("/api/inventory", makeCrudRouter(erpModels.InventoryItem, { ...crudCtx, required: ["name"] }));
+app.use("/api/stock-movements", makeCrudRouter(erpModels.StockMovement, { ...crudCtx, required: ["date", "itemId", "type"] }));
+app.use("/api/sprays", makeCrudRouter(erpModels.SprayLog, { ...crudCtx, required: ["date"] }));
+app.use("/api/irrigations", makeCrudRouter(erpModels.IrrigationLog, {
+  ...crudCtx,
+  required: ["date"],
+  cascade: async (userEmail, id) => {
+    await AccEntryModel.deleteMany({ userEmail, refType: "irrigation", refId: id });
+  }
+}));
+app.use("/api/workers", makeCrudRouter(erpModels.Worker, { ...crudCtx, required: ["name"] }));
+app.use("/api/work-logs", makeCrudRouter(erpModels.WorkLog, { ...crudCtx, required: ["date", "workerId"] }));
+app.use("/api/advances", makeCrudRouter(erpModels.Advance, { ...crudCtx, required: ["date", "workerId"] }));
+app.use("/api/payrolls", makeCrudRouter(erpModels.Payroll, { ...crudCtx, required: ["paidDate", "workerId"] }));
+app.use("/api/harvests", makeCrudRouter(erpModels.Harvest, { ...crudCtx, required: ["date"] }));
 
 app.get("/api/health", (req, res) => {
   const cfg = readSheetsConfig();
@@ -353,15 +452,51 @@ app.post("/api/auth/login", async (req, res) => {
       if (!user) return res.status(400).json({ success: false, message: "ไม่พบอีเมลนี้ในระบบ หรือรหัสผ่านไม่ถูกต้อง" });
       if (user.passwordHash !== hashPassword(password, user.salt))
         return res.status(400).json({ success: false, message: "รหัสผ่านไม่ถูกต้อง" });
-      return res.json({ success: true, email: user.email, firstName: user.firstName || "", farmName: user.farmName || "", message: "เข้าสู่ระบบสำเร็จ!" });
+      return res.json({ success: true, email: user.email, token: issueToken(user.email), firstName: user.firstName || "", farmName: user.farmName || "", message: "เข้าสู่ระบบสำเร็จ!" });
     } else {
-      return res.json({ success: true, email, firstName: "", farmName: "", message: "เข้าสู่ระบบสำเร็จ (โหมด Local)" });
+      return res.json({ success: true, email, token: issueToken(email), firstName: "", farmName: "", message: "เข้าสู่ระบบสำเร็จ (โหมด Local)" });
     }
   } catch (e) { return res.status(500).json({ success: false, message: e.message }); }
 });
 
+// ผู้เยี่ยมชม: ออก token แยกรายเครื่อง (guest-<รหัสเครื่อง>) ข้อมูลไม่ปะปนกัน
+app.post("/api/auth/guest", (req, res) => {
+  const deviceId = req.body && req.body.deviceId;
+  if (!isValidGuestDevice(deviceId)) {
+    return res.status(400).json({ success: false, message: "รหัสเครื่องไม่ถูกต้อง" });
+  }
+  const email = "guest-" + String(deviceId).toLowerCase();
+  res.json({ success: true, email, token: issueToken(email) });
+});
+
+// ย้ายข้อมูลเดิมของโหมดผู้เยี่ยมชมแบบเก่า (ที่ใช้บัญชี "guest" ร่วมกัน) เข้าบัญชีปัจจุบัน
+app.post("/api/migrate/adopt-guest", requireAuth, async (req, res) => {
+  const target = req.userEmail;
+  const result = { fieldLogs: 0, plantSurveys: 0, accEntries: 0 };
+  try {
+    if (isMongoConnected) {
+      const move = async (Model, key) => {
+        const r = await Model.updateMany({ userEmail: "guest" }, { $set: { userEmail: target } });
+        result[key] += r.modifiedCount || 0;
+      };
+      await move(FieldLogModel, "fieldLogs");
+      await move(PlantSurveyModel, "plantSurveys");
+      await move(AccEntryModel, "accEntries");
+    }
+    initializeLocalData();
+    const local = readLocalData();
+    ["fieldLogs", "plantSurveys", "accEntries"].forEach((key) => {
+      local[key] = local[key].map((i) => ((i.userEmail || "guest").toLowerCase() === "guest" ? { ...i, userEmail: target } : i));
+    });
+    writeLocalData(local);
+    res.json({ success: true, moved: result });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 app.get("/api/data", validateUserEmail, async (req, res) => {
-  const userEmail = (req.query.userEmail || "guest").toLowerCase().trim();
+  const userEmail = req.userEmail;
   if (isMongoConnected) {
     try {
       const fieldLogs = await FieldLogModel.find({ userEmail }).lean();
@@ -418,9 +553,9 @@ app.post("/api/data", validateUserEmail, async (req, res) => {
   res.json({ success: true, userEmail, message: isMongoConnected ? "Saved to MongoDB" : "Saved locally (Offline Mode)" });
 });
 
-app.delete("/api/data/:collection/:id", async (req, res) => {
+app.delete("/api/data/:collection/:id", validateUserEmail, async (req, res) => {
   const { collection, id } = req.params;
-  const userEmail = (req.query.userEmail || "guest").toLowerCase().trim();
+  const userEmail = req.userEmail;
   if (!["fieldLogs", "plantSurveys", "accEntries"].includes(collection))
     return res.status(400).json({ success: false, message: "Invalid collection" });
   initializeLocalData();
@@ -517,7 +652,7 @@ app.post("/api/ledger/calc-expense", validateUserEmail, async (req, res) => {
 });
 
 // อ่าน/บันทึกการตั้งค่า Google Sheet Webhook
-app.get("/api/sheets/config", async (req, res) => {
+app.get("/api/sheets/config", requireAuth, async (req, res) => {
   if (isMongoConnected && (!cachedSheetsConfig || !cachedSheetsConfig.webhookUrl)) {
     await syncSheetsConfigFromMongo();
   }
@@ -534,7 +669,7 @@ app.get("/api/sheets/config", async (req, res) => {
   });
 });
 
-app.post("/api/sheets/config", async (req, res) => {
+app.post("/api/sheets/config", requireAuth, async (req, res) => {
   const { webhookUrl, spreadsheetId } = req.body || {};
   const current = readSheetsConfig();
   const nextCfg = {

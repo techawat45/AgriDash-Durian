@@ -6,7 +6,7 @@
 
 let currentLoggedInEmail = 'guest', isGuestMode = false, isRegisterMode = false;
 let selectedVigour = 4, currentAccType = 'income', currentPredictorModeLocal = 'flower';
-let isPHISafe = false, isSaving = false;
+let isSaving = false;
 let fieldLogs = [], plantSurveys = [], accEntries = [];
 let totalIncomeAcc = 0, totalExpenseAcc = 0;
 
@@ -29,28 +29,8 @@ const defaultProductSuggestions = [
   'แคลเซียม-โบรอน', 'แมกนีเซียมคีเลต', 'ซิงค์คีเลต', 'สาหร่ายทะเลสกัดเข้มข้น',
   'น้ำตาลทางด่วนซอร์บิทอล', 'สารแพคโคลบิวทราโซล', 'อะบาเมกติน', 'ไทอะมีทอกแซม',
   'อิมิดาโคลพริด', 'ฟิโพรนิล', 'แมนโคเซบ', 'คาร์เบนดาซิม', 'เมทาแลกซิล',
-  'ฟอสอีทิล-อะลูมิเนียม', 'ยาจับใบเกรดพรีเมียม', 'ปูนโดโลไมท์', 'ท่อ PE เกษตร',
+  'ฟอสอีทิล-อะลูมิเนียม', 'ยาจับใบเกรดพรีเมียม', 'ปูนโดโลไมท์', 'ท่อน้ำเกษตร',
   'หัวสปริงเกอร์สวนทุเรียน', 'เชือกโยงกิ่งทุเรียน', 'น้ำมันดีเซลเครื่องสูบน้ำ'
-];
-
-const incomeCategories = [
-  '🏛️ เงินสะสม / บัญชีกองกลางสวน',
-  '🟢 ขายผลผลิตทุเรียนตัดสด (เหมาสวน / ล้ง)',
-  '🟢 ขายผลผลิตทุเรียนคัดเกรด',
-  '🟢 ขายผลผลิตทุเรียนแปรรูป / ตกเกรด',
-  '🟢 ขายผลผลิตพืชร่วม (มังคุด / เงาะ / ลองกอง)',
-  '🟢 เงินอุดหนุนเกษตร / รายรับอื่น'
-];
-
-const expenseCategories = [
-  '🔴 ค่าปุ๋ยเคมี / ปุ๋ยอินทรีย์ / ธาตุอาหาร',
-  '🔴 ค่าสารเคมีเกษตร / สารแพคโคล / ยาพ่น',
-  '🔴 ค่าแรงงาน (ตัดหญ้า / พ่นยา / โยงลูก)',
-  '🔴 ค่าน้ำมันเชื้อเพลิง / ค่าไฟฟ้าปั๊มน้ำ',
-  '🔴 ค่าซ่อมบำรุงเครื่องจักร / ระบบท่อน้ำ',
-  '🔴 ค่าวัสดุอุปกรณ์สวน (เชือกโยง / ถุงห่อ)',
-  '🏛️ ค่าใช้จ่ายกองกลางสวน / ค่ากงสี',
-  '🔴 ค่าขนส่ง / ค่าดำเนินการอื่นๆ'
 ];
 
 // ====== UTILITY & THAI DATE HELPERS ======
@@ -95,7 +75,8 @@ function updateAllThaiDateBadges() {
   const pairs = [
     ['acc-date', 'acc-date-thai-badge'],
     ['log-date', 'log-date-thai-badge'],
-    ['plant-date', 'plant-date-thai-badge']
+    ['plant-date', 'plant-date-thai-badge'],
+    ['harv-date', 'harv-date-thai-badge']
   ];
   pairs.forEach(([inputId, badgeId]) => {
     const input = document.getElementById(inputId);
@@ -109,11 +90,35 @@ function updateAllThaiDateBadges() {
 
 function setDefaultTodayDates() {
   const today = getTodayISO();
-  ['acc-date', 'log-date', 'plant-date', 'dash-predictor-date'].forEach(id => {
+  ['acc-date', 'log-date', 'plant-date', 'dash-predictor-date', 'harv-date'].forEach(id => {
     const el = document.getElementById(id);
     if (el && !el.value) el.value = today;
   });
   updateAllThaiDateBadges();
+}
+
+// ====== DYNAMIC ORCHARD/PLOT SELECTS ======
+function refreshPlotSelects() {
+  if (typeof AGRI_ORCHARDS === 'undefined') return;
+  const calcSel = document.getElementById('calc-plot');
+  if (calcSel) {
+    const prev = calcSel.value;
+    calcSel.innerHTML = AGRI_ORCHARDS.optionsHTML({ includeAll: false, includeCommon: true, allowOrchardLevel: true });
+    if (prev && Array.from(calcSel.options).some(o => o.value === prev)) calcSel.value = prev;
+  }
+  const logSel = document.getElementById('log-plot');
+  if (logSel) {
+    const prev = logSel.value;
+    logSel.innerHTML = AGRI_ORCHARDS.optionsHTML({ includeAll: false, includeCommon: true, allowOrchardLevel: true });
+    if (prev && Array.from(logSel.options).some(o => o.value === prev)) logSel.value = prev;
+  }
+  const plantSel = document.getElementById('plant-plot');
+  if (plantSel) {
+    const prev = plantSel.value;
+    plantSel.innerHTML = AGRI_ORCHARDS.optionsHTML({ includeAll: false, includeCommon: false, allowOrchardLevel: true });
+    if (prev && Array.from(plantSel.options).some(o => o.value === prev)) plantSel.value = prev;
+  }
+  if (typeof refreshLedgerSelectors === 'function') refreshLedgerSelectors();
 }
 
 // ====== AUTO-COMPLETE PRODUCT SUGGESTIONS ======
@@ -140,7 +145,12 @@ function refreshProductDatalist() {
   const dl = document.getElementById('agri-product-suggestions');
   if (!dl) return;
   const all = new Set([...defaultProductSuggestions, ...getSavedCustomProducts()]);
-  // ดึงชื่อสินค้าจากประวัติสมุดบัญชีและงานแปลงที่เคยบันทึกไว้ด้วย
+  if (typeof AGRI_DATA !== 'undefined' && AGRI_DATA.state && Array.isArray(AGRI_DATA.state.inventory)) {
+    AGRI_DATA.state.inventory.forEach(it => {
+      if (it && it.name) all.add(String(it.name).trim());
+    });
+  }
+  // ดึงชื่อสินค้าจากประวัติสมุดบัญชีที่เคยบันทึกไว้ด้วย
   accEntries.forEach(e => {
     if (e.detail) {
       const matches = e.detail.split(/[,+|]/);
@@ -187,7 +197,7 @@ function updateConnectionUI(health) {
     if (dot) dot.className = 'status-dot offline';
     const isGhPages = window.location.hostname.includes('github.io');
     if (ct) {
-      ct.innerText = isGhPages ? 'GitHub Pages (แคชในเครื่อง)' : 'โหมดในเครื่อง';
+      ct.innerText = isGhPages ? 'แคชในเครื่อง' : 'โหมดในเครื่อง';
       ct.style.display = 'block';
     }
 
@@ -199,7 +209,7 @@ function updateConnectionUI(health) {
 
       bar.innerHTML = `
         <div style="display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:0.86rem; padding: 2px 0;">
-          <span>ℹ️ ${userTag} — ${isGhPages ? 'เปิดใช้งานผ่าน GitHub Pages (ข้อมูลจัดเก็บในเครื่องอย่างปลอดภัย & พร้อมสำรอง Google Sheet)' : 'โหมดออฟไลน์ — ข้อมูลถูกจัดเก็บสำรองไว้ในเครื่อง'}</span>
+          <span>ℹ️ ${userTag} — ${isGhPages ? 'เปิดใช้งานโหมดข้อมูลในเครื่อง และพร้อมสำรองออนไลน์' : 'โหมดออฟไลน์ — ข้อมูลถูกจัดเก็บสำรองไว้ในเครื่อง'}</span>
           <button type="button" onclick="dismissOfflineBanner()" style="background:rgba(0,0,0,0.08); border:none; border-radius:6px; color:inherit; font-weight:800; cursor:pointer; padding:3px 10px; font-size:0.82rem;" title="ปิดแถบแจ้งเตือนนี้">✕ ปิดแถบนี้</button>
         </div>
       `;
@@ -208,7 +218,7 @@ function updateConnectionUI(health) {
   } else {
     bar.classList.add('hidden');
     if (dot) dot.className = 'status-dot online';
-    const mode = health.mode === 'mongodb_atlas' ? 'MongoDB Atlas คลาวด์' : 'ฐานข้อมูลเครื่อง';
+    const mode = health.mode === 'mongodb_atlas' ? 'ฐานข้อมูลคลาวด์' : 'ฐานข้อมูลเครื่อง';
     if (ct) { ct.innerText = '🟢 ' + mode; ct.style.display = 'block'; }
   }
 }
@@ -242,8 +252,8 @@ function updateAvatarUI(email, firstName, farmName) {
   const mobAuthSub = document.getElementById('mob-sheet-auth-sub');
 
   if (isGuest) {
-    if (disp) disp.innerText = 'ข้อมูลบันทึกในเครื่อง & กองกลาง';
-    if (menuTitle) menuTitle.innerText = 'โหมดผู้เยี่ยมชม (Guest)';
+    if (disp) disp.innerText = 'ข้อมูลบันทึกแยกตามเครื่องและกองกลาง';
+    if (menuTitle) menuTitle.innerText = 'โหมดผู้เยี่ยมชม';
     if (loginHeaderBtn) loginHeaderBtn.style.display = 'inline-flex';
     if (statusBadge) {
       statusBadge.className = 'badge-guest';
@@ -259,8 +269,8 @@ function updateAvatarUI(email, firstName, farmName) {
     if (menuSwitchBtn) menuSwitchBtn.style.display = 'flex';
     if (menuLogoutBtn) menuLogoutBtn.innerText = '🧹 ล้างแคชผู้เยี่ยมชม';
 
-    if (mobAuthTitle) mobAuthTitle.innerText = 'เข้าสู่ระบบ (Login)';
-    if (mobAuthSub) mobAuthSub.innerText = 'เชื่อมต่อบัญชีจริง MongoDB Atlas';
+    if (mobAuthTitle) mobAuthTitle.innerText = 'เข้าสู่ระบบ';
+    if (mobAuthSub) mobAuthSub.innerText = 'เชื่อมต่อบัญชีจริงคลาวด์';
   } else {
     const cleanEmail = email.toLowerCase();
     const displayName = firstName || farmName || cleanEmail.split('@')[0];
@@ -275,12 +285,12 @@ function updateAvatarUI(email, firstName, farmName) {
       av.classList.remove('avatar-guest');
       const initials = (firstName ? firstName.substring(0, 2) : cleanEmail.substring(0, 2)).toUpperCase();
       av.childNodes[0].nodeValue = initials;
-      av.title = `เข้าสู่ระบบเป็น ${cleanEmail} (คลิกเพื่อสลับผู้ใช้/ออกจากระบบ)`;
+      av.title = `เข้าสู่ระบบเป็น ${cleanEmail}`;
     }
     if (menuLoginBtn) menuLoginBtn.style.display = 'none';
     if (menuRegisterBtn) menuRegisterBtn.style.display = 'none';
     if (menuSwitchBtn) menuSwitchBtn.style.display = 'flex';
-    if (menuLogoutBtn) menuLogoutBtn.innerText = '🚪 ออกจากระบบ (Logout)';
+    if (menuLogoutBtn) menuLogoutBtn.innerText = '🚪 ออกจากระบบ';
 
     if (mobAuthTitle) mobAuthTitle.innerText = 'สลับผู้ใช้งาน / ออกจากระบบ';
     if (mobAuthSub) mobAuthSub.innerText = `บัญชี: ${cleanEmail}`;
@@ -366,7 +376,7 @@ function promptSwitchUser() {
   openLoginModal();
   const ti = document.getElementById('auth-modal-title');
   const sub = document.getElementById('auth-modal-sub');
-  if (ti) ti.innerText = '🔄 สลับบัญชีผู้ใช้งาน (Switch User)';
+  if (ti) ti.innerText = '🔄 สลับบัญชีผู้ใช้งาน';
   if (sub) sub.innerText = 'เลือกบัญชีที่เคยบันทึกไว้ หรือกรอกอีเมลใหม่เพื่อสลับบัญชี';
 }
 
@@ -417,7 +427,7 @@ async function handleEmailAuthSubmit(event) {
       document.getElementById('auth-modal')?.classList.add('hidden');
       updateAvatarUI(r.email, r.firstName, r.farmName);
       showToast('ยินดีต้อนรับ ' + (r.firstName || r.email) + ' เข้าสู่ระบบเรียบร้อย', 'success');
-      await loadUserData();
+      await reloadUserWorkspace();
       AGRI_STORAGE.checkHealth().then(updateConnectionUI);
     }
   } catch (err) {
@@ -427,15 +437,16 @@ async function handleEmailAuthSubmit(event) {
   }
 }
 
-function handleGuestMode(event) {
+async function handleGuestMode(event) {
   if (event) { event.preventDefault(); event.stopPropagation(); }
   currentLoggedInEmail = 'guest';
   isGuestMode = true;
+  AGRI_STORAGE.setToken('');
   AGRI_STORAGE.saveSession('guest', true);
   document.getElementById('auth-modal')?.classList.add('hidden');
   updateAvatarUI('guest');
-  showToast('เข้าใช้งานในโหมดผู้เยี่ยมชม (Guest Mode) เรียบร้อย', 'success');
-  loadUserData();
+  showToast('เข้าใช้งานในโหมดผู้เยี่ยมชมเรียบร้อย', 'success');
+  await reloadUserWorkspace();
 }
 
 function toggleSignOutMenu(event) {
@@ -444,7 +455,7 @@ function toggleSignOutMenu(event) {
 }
 document.addEventListener('click', () => document.getElementById('signout-menu')?.classList.add('hidden'));
 
-function signOutUser() {
+async function signOutUser() {
   document.getElementById('signout-menu')?.classList.add('hidden');
   const prevEmail = currentLoggedInEmail;
   AGRI_STORAGE.clearSession();
@@ -452,49 +463,46 @@ function signOutUser() {
   isGuestMode = true;
   AGRI_STORAGE.saveSession('guest', true);
   updateAvatarUI('guest');
-  loadUserData();
+  await reloadUserWorkspace();
   showToast(prevEmail !== 'guest' ? 'ออกจากระบบเรียบร้อยแล้ว — สลับเป็นโหมดผู้เยี่ยมชม' : 'ล้างแคชผู้เยี่ยมชมเรียบร้อยแล้ว', 'success');
 }
 
-// ====== DATA LOAD & SAVE (MONGODB ATLAS) ======
-async function loadUserData() {
-  setSyncIndicator('syncing', 'กำลังดึงข้อมูลจากคลาวด์...');
-  const result = await AGRI_STORAGE.loadData(currentLoggedInEmail);
-  fieldLogs = (result.data.fieldLogs || []).filter(x => !String(x.activity || '').includes('???'));
-  plantSurveys = result.data.plantSurveys || [];
-  accEntries = result.data.accEntries || [];
+// ====== DATA LOAD & SAVE (MONGODB ATLAS + WORKSPACE) ======
+async function reloadUserWorkspace() {
+  setSyncIndicator('syncing', 'กำลังดึงข้อมูลสวนจากคลาวด์...');
+  await AGRI_STORAGE.ensureToken();
+  const scopeEmail = currentLoggedInEmail || 'guest';
+  AGRI_DATA.setScope(scopeEmail);
 
-  // หากยังไม่มีข้อมูลตัวอย่างในสมุดบัญชี ให้แสดงรายการเริ่มต้นเพื่อให้เห็นภาพชัดเจน
-  if (accEntries.length === 0) {
-    const today = getTodayISO();
-    accEntries = [
-      {
-        id: 'acc-init-1',
-        date: today,
-        type: 'income',
-        plot: '🏛️ บัญชีกองกลางสวน / กงสี',
-        category: '🏛️ เงินสะสม / บัญชีกองกลางสวน',
-        detail: 'เงินทุนหมุนเวียนกองกลางสวนทุเรียน | 🏛️ บัญชีกองกลางสวน / กงสี',
-        amount: 50000
-      },
-      {
-        id: 'acc-init-2',
-        date: today,
-        type: 'expense',
-        plot: '1) สวนหมอนทอง (บ้าน)',
-        category: '🔴 ค่าปุ๋ยเคมี / ปุ๋ยอินทรีย์ / ธาตุอาหาร',
-        detail: 'ปุ๋ยเคมี 8-24-24 (2 กระสอบ @฿1,450) + อะบาเมกติน (2 ขวด @฿350) | ร้านจันทบุรีการเกษตร | 1) สวนหมอนทอง (บ้าน)',
-        amount: 3600
-      }
-    ];
+  const ws = await AGRI_DATA.loadWorkspace();
+  if (ws && !ws.offline && ws.legacy) {
+    fieldLogs = (ws.legacy.fieldLogs || []).filter(x => !String(x.activity || '').includes('???'));
+    plantSurveys = ws.legacy.plantSurveys || [];
+    accEntries = ws.legacy.accEntries || [];
+    AGRI_STORAGE.saveDataCache({ fieldLogs, plantSurveys, accEntries }, scopeEmail);
+    setSyncIndicator('synced', 'ซิงค์คลาวด์แล้ว');
+  } else {
+    const result = await AGRI_STORAGE.loadData(scopeEmail);
+    fieldLogs = (result.data.fieldLogs || []).filter(x => !String(x.activity || '').includes('???'));
+    plantSurveys = result.data.plantSurveys || [];
+    accEntries = result.data.accEntries || [];
+    setSyncIndicator(result.offline ? 'error' : 'synced', result.offline ? 'โหมดออฟไลน์' : 'ซิงค์คลาวด์แล้ว');
   }
 
-  const sourceText = result.source === 'mongodb_atlas' ? 'ซิงค์คลาวด์แล้ว' : 'ซิงค์ข้อมูลแล้ว';
-  setSyncIndicator(result.offline ? 'error' : 'synced', result.offline ? 'โหมดออฟไลน์' : sourceText);
+  if (typeof AGRI_ORCHARDS !== 'undefined') AGRI_ORCHARDS.syncFromState();
+  refreshPlotSelects();
   refreshProductDatalist();
   renderAllTables();
   calculateFlowerDates();
   loadAgroMeasurementsFromCache();
+  if (typeof refreshExecutiveDashboard === 'function') refreshExecutiveDashboard();
+  if (typeof refreshOpsAll === 'function') refreshOpsAll();
+  if (typeof refreshWorkforceAll === 'function') refreshWorkforceAll();
+  if (typeof refreshHarvestAll === 'function') refreshHarvestAll();
+}
+
+async function loadUserData() {
+  return reloadUserWorkspace();
 }
 
 async function saveLocalData() {
@@ -510,7 +518,8 @@ async function saveLocalData() {
 function renderAllTables() {
   renderFieldLogs();
   renderPlantSurveys();
-  renderAccEntries();
+  if (typeof renderAccEntries === 'function') renderAccEntries();
+  if (typeof renderLegacyMapping === 'function') renderLegacyMapping();
 }
 
 function renderFieldLogs() {
@@ -518,19 +527,20 @@ function renderFieldLogs() {
   if (!tbody) return;
   tbody.innerHTML = '';
   if (!fieldLogs.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--slate-500);padding:24px;font-weight:600;">ยังไม่มีประวัติการทำงานในแปลง — กดปุ่ม "บันทึกงานแปลง" เพื่อเพิ่มรายการ</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--slate-500);padding:24px;font-weight:600;">ยังไม่มีประวัติการทำงานในแปลง — กดปุ่ม "เพิ่มบันทึกงานแปลง" เพื่อเพิ่มรายการ</td></tr>';
     return;
   }
   [...fieldLogs].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(log => {
     const tr = document.createElement('tr');
     const cost = safeNum(log.cost);
+    const plotLabel = typeof AGRI_ORCHARDS !== 'undefined' ? (AGRI_ORCHARDS.entryLabel(log) || log.plot || '') : (log.plot || '');
     tr.innerHTML = `
       <td data-label="วันที่" style="font-weight:700;white-space:nowrap;">${escapeHtml(formatDateSlashThai(log.date))}</td>
-      <td data-label="แปลงสวน" style="font-weight:800;color:var(--slate-900)">${escapeHtml(log.plot || '')}</td>
+      <td data-label="สวน / แปลง" style="font-weight:800;color:var(--slate-900)">${escapeHtml(plotLabel)}</td>
       <td data-label="กิจกรรม"><span class="badge-op">${escapeHtml(log.activity || '')}</span></td>
       <td data-label="รายละเอียด" style="font-size:0.88rem;color:var(--slate-700)">${escapeHtml(log.detail || '-')}</td>
       <td data-label="ค่าใช้จ่าย" style="text-align:right;font-weight:800;color:var(--slate-900)">฿${cost.toLocaleString('th-TH', { minimumFractionDigits: 2 })}</td>
-      <td data-label="จัดการ" style="text-align:center"><button class="btn btn-outline" style="height:34px;width:34px;padding:0;color:var(--rose-600);border-color:var(--rose-200);border-radius:8px;" onclick="deleteFieldLog('${escapeHtml(log.id || '')}')" title="ลบรายการ">🗑️</button></td>
+      <td data-label="จัดการ" style="text-align:center"><button class="btn-icon danger" onclick="deleteFieldLog('${escapeHtml(log.id || '')}')" title="ลบรายการ">🗑️</button></td>
     `;
     tbody.appendChild(tr);
   });
@@ -547,124 +557,32 @@ function renderPlantSurveys() {
   [...plantSurveys].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(sv => {
     const tr = document.createElement('tr');
     const danger = (sv.trunk || '').includes('พบแผล') || (sv.trunk || '').includes('มอด');
+    const plotLabel = typeof AGRI_ORCHARDS !== 'undefined' ? (AGRI_ORCHARDS.entryLabel(sv) || sv.plot || '') : (sv.plot || '');
     tr.innerHTML = `
       <td data-label="วันที่สำรวจ" style="font-weight:700;white-space:nowrap;">${escapeHtml(formatDateSlashThai(sv.date))}</td>
-      <td data-label="แปลงสวน" style="font-weight:800">${escapeHtml(sv.plot || '')}</td>
+      <td data-label="สวน / แปลง" style="font-weight:800">${escapeHtml(plotLabel)}</td>
       <td data-label="ระยะ"><span class="badge-stage">${escapeHtml(sv.stage || '')}</span></td>
       <td data-label="สภาพใบ/ศัตรูพืช" style="font-size:0.88rem;color:var(--slate-700)">${escapeHtml(sv.leafPest || '')}</td>
       <td data-label="สภาพลำต้น" style="font-size:0.88rem;font-weight:800;color:${danger ? 'var(--rose-700)' : 'var(--emerald-700)'}">${escapeHtml(sv.trunk || '')}</td>
       <td data-label="คำแนะนำ" style="font-size:0.88rem">${escapeHtml(sv.recommendation || '')}</td>
-      <td data-label="จัดการ" style="text-align:center"><button class="btn btn-outline" style="height:34px;width:34px;padding:0;color:var(--rose-600);border-color:var(--rose-200);border-radius:8px;" onclick="deletePlantSurvey('${escapeHtml(sv.id || '')}')" title="ลบรายการ">🗑️</button></td>
+      <td data-label="จัดการ" style="text-align:center"><button class="btn-icon danger" onclick="deletePlantSurvey('${escapeHtml(sv.id || '')}')" title="ลบรายการ">🗑️</button></td>
     `;
     tbody.appendChild(tr);
   });
 }
 
 function extractEntryPlot(entry) {
+  if (typeof AGRI_ORCHARDS !== 'undefined') {
+    const lbl = AGRI_ORCHARDS.entryLabel(entry);
+    if (lbl) return lbl;
+  }
   if (entry.plot) return entry.plot;
   if (entry.detail && entry.detail.includes('|')) {
     const parts = entry.detail.split('|').map(s => s.trim());
     const last = parts[parts.length - 1];
     if (last.includes('สวน') || last.includes('แปลง') || last.includes('กองกลาง')) return last;
   }
-  return 'รวมทุกแปลง';
-}
-
-function resetAccFilters() {
-  const mEl = document.getElementById('acc-filter-month');
-  const pEl = document.getElementById('acc-filter-plot');
-  if (mEl) mEl.value = 'all';
-  if (pEl) pEl.value = 'all';
-  renderAccEntries();
-  showToast('แสดงรายการบัญชีทั้งหมดแล้ว', 'success');
-}
-
-function renderAccEntries() {
-  const tbody = document.getElementById('acc-table-body');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-
-  const filterMonth = document.getElementById('acc-filter-month')?.value || 'all';
-  const filterPlot = document.getElementById('acc-filter-plot')?.value || 'all';
-
-  const sortedAll = [...accEntries].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  // คำนวณยอดรวมทั้งหมดสำหรับหน้ากราฟและหน้าแดชบอร์ด
-  let allInc = 0, allExp = 0;
-  sortedAll.forEach(e => {
-    const a = safeNum(e.amount);
-    if (e.type === 'income') allInc += a; else allExp += a;
-  });
-  totalIncomeAcc = allInc;
-  totalExpenseAcc = allExp;
-  const allNet = allInc - allExp;
-  const allMargin = allInc > 0 ? ((allNet / allInc) * 100).toFixed(1) : '0.0';
-
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.innerText = v; };
-  set('fin-rev-display', formatCurrency(allInc));
-  set('fin-exp-display', formatCurrency(allExp));
-  set('fin-net-display', formatCurrency(allNet));
-  set('fin-margin-display', allMargin + '%');
-  set('dash-net-profit', formatCurrency(allNet));
-
-  // กรองรายการตามเดือนและแปลงสวนสำหรับหน้าสมุดบัญชี
-  const filtered = sortedAll.filter(e => {
-    let matchMonth = true;
-    let matchPlot = true;
-    if (filterMonth !== 'all' && e.date) {
-      const m = String(e.date).split('-')[1];
-      matchMonth = (m === filterMonth);
-    }
-    if (filterPlot !== 'all') {
-      const ePlot = extractEntryPlot(e);
-      matchPlot = ePlot.includes(filterPlot) || (e.detail || '').includes(filterPlot) || (e.category || '').includes(filterPlot);
-    }
-    return matchMonth && matchPlot;
-  });
-
-  let fInc = 0, fExp = 0, incCount = 0, expCount = 0;
-  filtered.forEach(e => {
-    const a = safeNum(e.amount);
-    if (e.type === 'income') { fInc += a; incCount++; }
-    else { fExp += a; expCount++; }
-  });
-  const fNet = fInc - fExp;
-  const fMargin = fInc > 0 ? ((fNet / fInc) * 100).toFixed(1) : '0.0';
-
-  // อัปเดตการ์ดสรุปยอดเงิน 3 ใบด้านบนสุดของหน้าสมุดบัญชี
-  set('acc-top-inc', formatCurrency(fInc));
-  set('acc-top-exp', formatCurrency(fExp));
-  set('acc-top-net', (fNet >= 0 ? '+' : '') + formatCurrency(fNet));
-  set('acc-top-inc-count', `รายรับ ${incCount} รายการ`);
-  set('acc-top-exp-count', `รายจ่าย ${expCount} รายการ`);
-  set('acc-top-margin', `สัดส่วนคงเหลือสุทธิ ${fMargin}%`);
-
-  const netEl = document.getElementById('acc-top-net');
-  if (netEl) netEl.style.color = fNet >= 0 ? 'var(--blue-700)' : 'var(--rose-700)';
-
-  if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--slate-500);padding:28px;font-weight:600;">ไม่พบรายการบัญชีตามตัวกรองที่เลือก</td></tr>';
-    return;
-  }
-
-  filtered.forEach(entry => {
-    const isInc = entry.type === 'income';
-    const a = safeNum(entry.amount);
-    const plotName = extractEntryPlot(entry);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td data-label="วันที่" style="font-weight:700;white-space:nowrap;">${escapeHtml(formatDateSlashThai(entry.date))}</td>
-      <td data-label="ประเภท">${isInc ? '<span class="badge-income">🟢 รายรับ</span>' : '<span class="badge-expense">🔴 รายจ่าย</span>'}</td>
-      <td data-label="แปลง & หมวดหมู่">
-        <div style="font-weight:800;color:var(--slate-900)">${escapeHtml(entry.category || '')}</div>
-        <div style="font-size:0.78rem;color:var(--emerald-700);font-weight:700;">📍 ${escapeHtml(plotName)}</div>
-      </td>
-      <td data-label="รายละเอียด" style="font-size:0.88rem;color:var(--slate-700)">${escapeHtml(entry.detail || '-')}</td>
-      <td data-label="จำนวนเงิน" style="text-align:right;font-weight:800;font-size:1rem;white-space:nowrap;${isInc ? 'color:var(--emerald-700)' : 'color:var(--rose-700)'}">${isInc ? '+' : '-'}${formatCurrency(a)}</td>
-      <td data-label="จัดการ" style="text-align:center"><button class="btn btn-outline" style="height:34px;width:34px;padding:0;color:var(--rose-600);border-color:var(--rose-200);border-radius:8px;" onclick="deleteAccEntry('${escapeHtml(entry.id || '')}')" title="ลบรายการ">🗑️</button></td>
-    `;
-    tbody.appendChild(tr);
-  });
+  return 'กองกลาง / ใช้ร่วมกัน';
 }
 
 // ====== DELETE ITEMS ======
@@ -696,13 +614,14 @@ async function deleteAccEntry(id) {
 function saveFieldLog(e) {
   e.preventDefault();
   const dateVal = document.getElementById('log-date')?.value || getTodayISO();
-  const plotVal = document.getElementById('log-plot')?.value;
+  const plotRaw = document.getElementById('log-plot')?.value || '';
+  const target = typeof AGRI_ORCHARDS !== 'undefined' ? AGRI_ORCHARDS.resolve(plotRaw) : { orchardId: '', plotId: '', label: plotRaw };
   let actVal = document.getElementById('log-activity')?.value || '';
   if (actVal.includes('อื่นๆ')) {
     const c = document.getElementById('custom-activity-text')?.value;
     if (c) actVal = '🔧 ' + c;
   }
-  if (!dateVal || !plotVal || !actVal) {
+  if (!dateVal || !target.label || !actVal) {
     showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
     return;
   }
@@ -733,7 +652,9 @@ function saveFieldLog(e) {
   const log = {
     id: 'field-' + Date.now(),
     date: dateVal,
-    plot: plotVal,
+    orchardId: target.orchardId,
+    plotId: target.plotId,
+    plot: target.label,
     activity: actVal,
     detail: detailText,
     cost: totalCost
@@ -743,6 +664,7 @@ function saveFieldLog(e) {
   saveLocalData();
   syncSingleEntryToSheet({ fieldLog: log });
   renderFieldLogs();
+  if (typeof renderLegacyMapping === 'function') renderLegacyMapping();
   showToast('บันทึกกิจกรรมแปลงวันที่ ' + formatDateSlashThai(dateVal) + ' สำเร็จ!', 'success');
   setTimeout(() => switchView('dashboard'), 1000);
 }
@@ -751,9 +673,10 @@ function saveLog(e) { return saveFieldLog(e); }
 function savePlantSurvey(e) {
   e.preventDefault();
   const dateVal = document.getElementById('plant-date')?.value || getTodayISO();
-  const plotVal = document.getElementById('plant-plot')?.value;
-  if (!dateVal || !plotVal) {
-    showToast('กรุณากรอกข้อมูลให้ครบถ้วน', 'error');
+  const plotRaw = document.getElementById('plant-plot')?.value || '';
+  const target = typeof AGRI_ORCHARDS !== 'undefined' ? AGRI_ORCHARDS.resolve(plotRaw) : { orchardId: '', plotId: '', label: plotRaw };
+  if (!dateVal || (!target.orchardId && !target.plotId)) {
+    showToast('กรุณาสร้างและเลือกสวนหรือแปลงที่สำรวจก่อนบันทึก', 'error');
     return;
   }
   let sv = document.getElementById('plant-stage')?.value || '';
@@ -771,7 +694,9 @@ function savePlantSurvey(e) {
   const survey = {
     id: 'survey-' + Date.now(),
     date: dateVal,
-    plot: plotVal,
+    orchardId: target.orchardId,
+    plotId: target.plotId,
+    plot: target.label,
     stage: sv,
     leafPest,
     trunk,
@@ -782,14 +707,17 @@ function savePlantSurvey(e) {
   saveLocalData();
   syncSingleEntryToSheet({ plantSurvey: survey });
   renderPlantSurveys();
-  showToast('บันทึกผลสำรวจแปลง ' + plotVal + ' สำเร็จ!', 'success');
+  showToast('บันทึกผลสำรวจแปลง ' + target.label + ' สำเร็จ!', 'success');
   setTimeout(() => switchView('dashboard'), 1000);
 }
 
 function saveAccEntry(e) {
   e.preventDefault();
   const dateVal = document.getElementById('acc-date')?.value || getTodayISO();
-  const plotVal = document.getElementById('acc-plot')?.value || 'รวมทุกแปลง';
+  const plotRaw = document.getElementById('acc-plot')?.value || 'common';
+  const target = typeof AGRI_ORCHARDS !== 'undefined'
+    ? AGRI_ORCHARDS.resolve(plotRaw)
+    : { orchardId: '', plotId: '', label: 'กองกลาง / ใช้ร่วมกัน' };
   const catVal = document.getElementById('acc-category')?.value || '';
   const amountVal = safeNum(document.getElementById('acc-amount')?.value || 0);
   const descVal = (document.getElementById('acc-desc')?.value || '').trim();
@@ -812,13 +740,15 @@ function saveAccEntry(e) {
   }
 
   if (descVal) detailParts.push(descVal);
-  detailParts.push(plotVal);
+  if (!detailParts.length) detailParts.push(target.label);
 
   const entry = {
     id: 'acc-' + Date.now(),
     date: dateVal,
     type: currentAccType,
-    plot: plotVal,
+    orchardId: target.orchardId,
+    plotId: target.plotId,
+    plot: target.label,
     category: catVal,
     detail: detailParts.join(' | '),
     amount: amountVal
@@ -827,7 +757,7 @@ function saveAccEntry(e) {
   accEntries.unshift(entry);
   saveLocalData();
   syncSingleEntryToSheet({ accEntry: entry });
-  renderAccEntries();
+  if (typeof renderAccEntries === 'function') renderAccEntries();
 
   const descInput = document.getElementById('acc-desc');
   if (descInput) descInput.value = '';
@@ -842,7 +772,10 @@ function saveAccEntry(e) {
 function saveAgronomyRecommendation() {
   const stage = document.getElementById('calc-stage')?.value || '';
   const tank = document.getElementById('calc-trees')?.value || 1000;
-  const plot = document.getElementById('calc-plot')?.value || 'ทุกแปลง';
+  const plotRaw = document.getElementById('calc-plot')?.value || 'common';
+  const target = typeof AGRI_ORCHARDS !== 'undefined'
+    ? AGRI_ORCHARDS.resolve(plotRaw)
+    : { orchardId: '', plotId: '', label: 'กองกลาง / ใช้ร่วมกัน' };
   const npk = document.getElementById('rec-npk')?.innerText || '';
   const pest = document.getElementById('rec-pest')?.innerText || '';
   const estCost = safeNum(document.getElementById('calc-total-cost')?.value || 0);
@@ -850,9 +783,11 @@ function saveAgronomyRecommendation() {
   const log = {
     id: 'field-' + Date.now(),
     date: dateVal,
-    plot: `${plot} (ถัง ${tank} ลิตร)`,
+    orchardId: target.orchardId,
+    plotId: target.plotId,
+    plot: target.label,
     activity: '🌾 สูตรปุ๋ยและยา (' + stage + ')',
-    detail: 'ปุ๋ยทางดิน: ' + npk + ' | การป้องกัน: ' + pest,
+    detail: `ถัง ${tank} ลิตร | ปุ๋ยทางดิน: ${npk} | การป้องกัน: ${pest}`,
     cost: estCost
   };
   fieldLogs.unshift(log);
@@ -862,12 +797,15 @@ function saveAgronomyRecommendation() {
   showToast('บันทึกสูตรปุ๋ยระยะ ' + stage + ' ลงประวัติแปลงแล้ว', 'success');
 }
 
-// 1-Click: ส่งยอดค่าใช้จ่ายจากหน้าคำนวณปุ๋ย & สารเคมี เข้าสมุดบัญชี MongoDB Atlas + Google Sheet
+// 1-Click: ส่งยอดค่าใช้จ่ายจากหน้าคำนวณปุ๋ยและสารเคมีเข้าสมุดบัญชีและระบบสำรอง
 async function saveCalcExpenseToLedgerAndSheet() {
   const btn = document.getElementById('btn-calc-save-ledger');
   const stage = document.getElementById('calc-stage')?.value || 'สะสมอาหาร';
   const tankLiters = safeNum(document.getElementById('calc-trees')?.value || 1000);
-  const plot = document.getElementById('calc-plot')?.value || 'รวมทุกแปลง';
+  const plotRaw = document.getElementById('calc-plot')?.value || 'common';
+  const target = typeof AGRI_ORCHARDS !== 'undefined'
+    ? AGRI_ORCHARDS.resolve(plotRaw)
+    : { orchardId: '', plotId: '', label: 'กองกลาง / ใช้ร่วมกัน' };
   const totalCost = safeNum(document.getElementById('calc-total-cost')?.value || 0);
   const note = (document.getElementById('calc-note')?.value || '').trim();
   const alsoSaveField = document.getElementById('calc-also-save-field')?.checked ?? true;
@@ -887,42 +825,46 @@ async function saveCalcExpenseToLedgerAndSheet() {
   const detailText = [
     `สูตรระยะ${stage} (ถัง ${tankLiters.toLocaleString('th-TH')} ลิตร)`,
     `${npk} + ${camg} + ${znb} + ${pest}`,
-    note || null,
-    plot
+    note || null
   ].filter(Boolean).join(' | ');
 
   const accEntry = {
     id: 'acc-calc-' + stamp,
     date: today,
     type: 'expense',
-    plot,
-    category: '🔴 ค่าปุ๋ยเคมี / ปุ๋ยอินทรีย์ / ธาตุอาหาร',
+    orchardId: target.orchardId,
+    plotId: target.plotId,
+    plot: target.label,
+    category: 'ปุ๋ยและธาตุอาหาร',
     detail: detailText,
-    amount: totalCost
+    amount: totalCost,
+    refType: 'calc',
+    refId: String(stamp)
   };
 
   const fieldLog = alsoSaveField ? {
     id: 'field-calc-' + stamp,
     date: today,
-    plot: `${plot} (ถัง ${tankLiters.toLocaleString('th-TH')} ลิตร)`,
+    orchardId: target.orchardId,
+    plotId: target.plotId,
+    plot: target.label,
     activity: `🌾 คำนวณปุ๋ยและสารเคมี (${stage})`,
-    detail: `${npk} | ${znb} | ${pest}${note ? ' | ' + note : ''}`,
+    detail: `ถัง ${tankLiters.toLocaleString('th-TH')} ลิตร | ${npk} | ${znb} | ${pest}${note ? ' | ' + note : ''}`,
     cost: totalCost
   } : null;
 
   if (btn) btn.classList.add('loading');
 
-  // อัปเดต State & Cache ในหน้าเว็บทันที
   accEntries.unshift(accEntry);
   if (fieldLog) fieldLogs.unshift(fieldLog);
-  AGRI_STORAGE.saveDataCache({ fieldLogs, plantSurveys, accEntries });
+  AGRI_STORAGE.saveDataCache({ fieldLogs, plantSurveys, accEntries }, currentLoggedInEmail || 'guest');
   rememberProductNames([npk, camg, znb]);
   renderAllTables();
 
-  setSyncIndicator('syncing', 'กำลังส่งเข้าสมุดบัญชีและ Google Sheet...');
+  setSyncIndicator('syncing', 'กำลังส่งเข้าสมุดบัญชีและระบบสำรอง...');
 
   try {
-    const r = await fetch(AGRI_STORAGE.apiUrl('/api/ledger/calc-expense'), {
+    const r = await AGRI_STORAGE.authFetch('/api/ledger/calc-expense', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest', accEntry, fieldLog }),
@@ -931,14 +873,14 @@ async function saveCalcExpenseToLedgerAndSheet() {
     const res = await AGRI_STORAGE.parseResponseSafely(r);
     if (!res || !res.success) throw new Error(res?.message || 'บันทึกไม่สำเร็จ');
 
-    setSyncIndicator('synced', res.sheetSynced ? 'ซิงค์ MongoDB + Sheet แล้ว' : 'บันทึกเข้าสมุดบัญชีแล้ว');
+    setSyncIndicator('synced', res.sheetSynced ? 'ซิงค์คลาวด์ + สำรองแล้ว' : 'บันทึกเข้าสมุดบัญชีแล้ว');
     refreshSheetsStatus();
     if (res.mongoSaved && res.sheetSynced) {
-      showToast(`✅ บันทึก ${formatCurrency(totalCost)} ลงสมุดบัญชี MongoDB Atlas และ Google Sheet แล้ว!`, 'success');
+      showToast(`✅ บันทึก ${formatCurrency(totalCost)} ลงสมุดบัญชีคลาวด์และแผ่นงานสำรองแล้ว!`, 'success');
     } else if (res.mongoSaved) {
-      showToast(`✅ บันทึก ${formatCurrency(totalCost)} ลงสมุดบัญชี MongoDB Atlas แล้ว (สำรองรอซิงค์ Sheet)`, 'success');
+      showToast(`✅ บันทึก ${formatCurrency(totalCost)} ลงสมุดบัญชีคลาวด์แล้ว`, 'success');
     } else if (res.sheetSynced) {
-      showToast(`⚠️ ฐานข้อมูลคลาวด์ออฟไลน์ — ส่งสำรอง ${formatCurrency(totalCost)} เข้า Google Sheet แล้ว!`, 'warning');
+      showToast(`⚠️ คลาวด์ออฟไลน์ — ส่งสำรอง ${formatCurrency(totalCost)} เข้าแผ่นงานสำรองแล้ว!`, 'warning');
     } else {
       showToast(`⚠️ บันทึกลงเครื่องแล้ว (${formatCurrency(totalCost)})`, 'warning');
     }
@@ -946,13 +888,12 @@ async function saveCalcExpenseToLedgerAndSheet() {
     const noteEl = document.getElementById('calc-note');
     if (noteEl) noteEl.value = '';
   } catch (err) {
-    // กรณี Backend ออฟไลน์ หรืออยู่บนโฮสต์สแตติก (GitHub Pages) ลองยิงตรงเข้า Google Sheet Webhook จากเบราว์เซอร์
     const directSynced = await fallbackDirectBrowserWebhook(accEntry, fieldLog);
-    setSyncIndicator(directSynced ? 'synced' : 'error', directSynced ? 'สำรองขึ้น Google Sheet แล้ว' : 'บันทึกในเครื่อง (ออฟไลน์)');
+    setSyncIndicator(directSynced ? 'synced' : 'error', directSynced ? 'สำรองออนไลน์แล้ว' : 'บันทึกในเครื่อง');
     showToast(
       directSynced
-        ? `⚠️ เซิร์ฟเวอร์ออฟไลน์ — ส่ง ${formatCurrency(totalCost)} สำรองเข้า Google Sheet โดยตรงแล้ว!`
-        : `⚠️ บันทึก ${formatCurrency(totalCost)} ในเครื่องเรียบร้อย (โหมดแคช/ออฟไลน์)`,
+        ? `⚠️ เซิร์ฟเวอร์ออฟไลน์ — ส่ง ${formatCurrency(totalCost)} เข้าแผ่นงานสำรองโดยตรงแล้ว!`
+        : `⚠️ บันทึก ${formatCurrency(totalCost)} ในเครื่องเรียบร้อย`,
       'warning'
     );
   } finally {
@@ -962,7 +903,10 @@ async function saveCalcExpenseToLedgerAndSheet() {
 
 // ====== VIEW SWITCHING & CONSOLIDATED NAVIGATION ======
 function switchView(viewName) {
-  const allViews = ['dashboard', 'agrotech', 'calc', 'finance', 'field', 'plant', 'accounting'];
+  const allViews = [
+    'dashboard', 'gis', 'ops', 'workforce', 'harvest', 'accounting', 'orchards',
+    'agrotech', 'calc', 'field', 'plant', 'finance'
+  ];
   allViews.forEach(v => {
     document.getElementById('view-' + v)?.classList.add('hidden');
     document.getElementById('nav-' + v + '-btn')?.classList.remove('active');
@@ -971,13 +915,21 @@ function switchView(viewName) {
 
   document.getElementById('view-' + viewName)?.classList.remove('hidden');
 
-  // จับคู่เมนูหลักที่ยุบรวมกันแล้วให้แสดงสถานะ Active อย่างถูกต้อง
   let navKey = viewName;
-  if (viewName === 'plant') navKey = 'field';
+  if (['field', 'plant', 'calc', 'agrotech'].includes(viewName)) navKey = 'ops';
   if (viewName === 'finance') navKey = 'accounting';
 
   document.getElementById('nav-' + navKey + '-btn')?.classList.add('active');
   document.getElementById('mob-' + navKey + '-btn')?.classList.add('active');
+
+  if (viewName === 'gis' && typeof onGisViewShown === 'function') onGisViewShown();
+  else if (viewName === 'ops' && typeof refreshOpsAll === 'function') refreshOpsAll();
+  else if (viewName === 'workforce' && typeof refreshWorkforceAll === 'function') refreshWorkforceAll();
+  else if (viewName === 'harvest' && typeof refreshHarvestAll === 'function') refreshHarvestAll();
+  else if (viewName === 'dashboard' && typeof refreshExecutiveDashboard === 'function') refreshExecutiveDashboard();
+  else if (viewName === 'orchards' && typeof renderOrchardsView === 'function') renderOrchardsView();
+  else if ((viewName === 'accounting' || viewName === 'finance') && typeof renderAccEntries === 'function') renderAccEntries();
+  else if (['calc', 'field', 'plant'].includes(viewName)) refreshPlotSelects();
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -1017,15 +969,9 @@ function setAccType(type) {
 }
 
 function updateAccCategories() {
-  const sel = document.getElementById('acc-category');
-  if (!sel) return;
-  sel.innerHTML = '';
-  (currentAccType === 'income' ? incomeCategories : expenseCategories).forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.innerText = c;
-    sel.appendChild(opt);
-  });
+  if (typeof populateLedgerFormCategories === 'function') {
+    populateLedgerFormCategories(currentAccType);
+  }
 }
 
 function onActivityChange() {
@@ -1043,27 +989,6 @@ function selectVigour(btn, r) {
   selectedVigour = r;
   document.querySelectorAll('#plant-form .segmented-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-}
-
-function selectGrade(btn) {
-  document.querySelectorAll('#field-form .segmented-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-function togglePHI() {
-  isPHISafe = !isPHISafe;
-  if (isPHISafe) {
-    document.getElementById('phi-banner')?.setAttribute('class', 'phi-banner clear');
-    const t = document.getElementById('phi-title'); if (t) t.innerText = 'ระยะปลอดภัยครบกำหนด: สามารถเก็บเกี่ยวผลผลิตได้';
-    const d = document.getElementById('phi-desc'); if (d) d.innerText = 'ครบกำหนดระยะเว้นเก็บเกี่ยวหลังพ่นสารเคมีแล้ว ผลผลิตปลอดภัย';
-    const bh = document.getElementById('btn-harvest'); if (bh) bh.disabled = false;
-    showToast('ปลดล็อกระยะปลอดภัย — พร้อมเก็บเกี่ยว', 'success');
-  } else {
-    document.getElementById('phi-banner')?.setAttribute('class', 'phi-banner active');
-    const t = document.getElementById('phi-title'); if (t) t.innerText = 'ระยะเว้นเก็บเกี่ยวหลังพ่นยา: เหลืออีก 5 วัน';
-    const d = document.getElementById('phi-desc'); if (d) d.innerText = 'งดเก็บเกี่ยวผลผลิตจนกว่าจะครบกำหนดระยะปลอดภัยหลังพ่นสารเคมี';
-    const bh = document.getElementById('btn-harvest'); if (bh) bh.disabled = true;
-  }
 }
 
 // ====== FIELD-READY ITEMIZED PURCHASES (2-ROW CARDS + AUTOCOMPLETE) ======
@@ -1232,7 +1157,7 @@ function savePredictorPlan() {
   const log = {
     id: 'field-' + Date.now(),
     date: dv,
-    plot: 'ทุกแปลง (แผนคาดการณ์)',
+    plot: 'ทุกสวนรวมกัน',
     activity: '🌸 วางแผนทำสารออกดอก',
     detail: `พันธุ์: ${vl} | สารออกฤทธิ์ ${days} วัน ➔ คาดการณ์ออกดอก: ${tf} | เก็บเกี่ยว: ${th}`,
     cost: 0
@@ -1475,9 +1400,9 @@ function saveAgroMeasurements() {
   const log = {
     id: 'field-soil-' + Date.now(),
     date: dv,
-    plot: 'ทุกแปลง (ตรวจวัดดินและน้ำ)',
+    plot: 'ทุกสวนรวมกัน',
     activity: '🔬 ตรวจวัดสภาพดินและอากาศ',
-    detail: `ความชื้น 15 ซม.: ${safeNum(m.soil15).toFixed(1)}% | 30 ซม.: ${safeNum(m.soil30).toFixed(1)}% | pH: ${safeNum(m.ph).toFixed(1)} | EC: ${safeNum(m.ec).toFixed(1)} | อุณหภูมิ: ${safeNum(m.temp).toFixed(1)}°C`,
+    detail: `ความชื้น 15 ซม.: ${safeNum(m.soil15).toFixed(1)}% | 30 ซม.: ${safeNum(m.soil30).toFixed(1)}% | กรด-ด่าง: ${safeNum(m.ph).toFixed(1)} | ความเค็ม: ${safeNum(m.ec).toFixed(1)} | อุณหภูมิ: ${safeNum(m.temp).toFixed(1)} องศา`,
     cost: 0
   };
   fieldLogs.unshift(log);
@@ -1514,8 +1439,8 @@ function runAgroAnalysis() {
 
   if (k15) k15.innerText = soil15.toFixed(1) + '%';
   if (k30) k30.innerText = soil30.toFixed(1) + '%';
-  if (kph) kph.innerText = ph.toFixed(1) + ' pH';
-  if (kec) kec.innerText = ec.toFixed(1) + ' dS/m';
+  if (kph) kph.innerText = ph.toFixed(1);
+  if (kec) kec.innerText = ec.toFixed(1);
 
   const t15 = document.getElementById('trend-soil-15');
   const t30 = document.getElementById('trend-soil-30');
@@ -1558,78 +1483,15 @@ function runAgroAnalysis() {
     : `<div style="background:var(--emerald-50);padding:14px;border-radius:10px;border:1.5px solid var(--emerald-200);"><strong style="color:var(--emerald-800)">💧 การจัดการน้ำ: รักษาความชื้นตามเกณฑ์ปกติ</strong><p style="font-size:0.86rem;color:var(--emerald-700);margin-top:6px;">ความชื้นดิน ${soil15.toFixed(1)}% อยู่ในเกณฑ์สมดุล ให้น้ำสม่ำเสมอเพื่อประคองตาดอกและใบ</p></div>`;
 
   let recSoilHtml = ph < 5.5
-    ? `<div style="background:var(--rose-50);padding:14px;border-radius:10px;border:1.5px solid var(--rose-200);"><strong style="color:var(--rose-800)">🧪 การจัดการดิน: ดินเปรี้ยวจัด (pH ${ph.toFixed(1)})</strong><p style="font-size:0.86rem;color:var(--rose-700);margin-top:6px;">แนะนำหว่านปูนโดโลไมท์ 2-3 กก./ต้น รอบทรงพุ่มเพื่อปรับสภาพดินและลดความเสี่ยงเชื้อราไฟทอปธอรา</p></div>`
-    : `<div style="background:var(--emerald-50);padding:14px;border-radius:10px;border:1.5px solid var(--emerald-200);"><strong style="color:var(--emerald-800)">🧪 การจัดการดิน: สภาพดินสมบูรณ์ดี (pH ${ph.toFixed(1)})</strong><p style="font-size:0.86rem;color:var(--emerald-700);margin-top:6px;">ค่า pH และความเค็มดิน (${ec.toFixed(1)} dS/m) เหมาะสมต่อการดูดซึมปุ๋ยทางดิน</p></div>`;
+    ? `<div style="background:var(--rose-50);padding:14px;border-radius:10px;border:1.5px solid var(--rose-200);"><strong style="color:var(--rose-800)">🧪 การจัดการดิน: ดินเปรี้ยวจัด (ระดับ ${ph.toFixed(1)})</strong><p style="font-size:0.86rem;color:var(--rose-700);margin-top:6px;">แนะนำหว่านปูนโดโลไมท์ 2-3 กก./ต้น รอบทรงพุ่มเพื่อปรับสภาพดินและลดความเสี่ยงเชื้อราไฟทอปธอรา</p></div>`
+    : `<div style="background:var(--emerald-50);padding:14px;border-radius:10px;border:1.5px solid var(--emerald-200);"><strong style="color:var(--emerald-800)">🧪 การจัดการดิน: สภาพดินสมบูรณ์ดี (ระดับ ${ph.toFixed(1)})</strong><p style="font-size:0.86rem;color:var(--emerald-700);margin-top:6px;">ค่ากรด-ด่างและความเค็มดิน (${ec.toFixed(1)}) เหมาะสมต่อการดูดซึมปุ๋ยทางดิน</p></div>`;
 
   let recWeatherHtml = hum > 85 && rain > 5
     ? `<div style="background:var(--rose-50);padding:14px;border-radius:10px;border:1.5px solid var(--rose-200);"><strong style="color:var(--rose-800)">🌦️ สภาพอากาศ: ความชื้นสูง เสี่ยงโรคเชื้อรา</strong><p style="font-size:0.86rem;color:var(--rose-700);margin-top:6px;">ความชื้น ${hum.toFixed(0)}% และฝนสะสม ${rain.toFixed(1)} มม. แนะนำฉีดพ่นสารป้องกันเชื้อราเมทาแลกซิลหรือฟอสอีทิล-อะลูมิเนียม</p></div>`
-    : `<div style="background:var(--emerald-50);padding:14px;border-radius:10px;border:1.5px solid var(--emerald-200);"><strong style="color:var(--emerald-800)">🌦️ สภาพอากาศ: ปลอดโปร่ง เหมาะแก่การพ่นยา</strong><p style="font-size:0.86rem;color:var(--emerald-700);margin-top:6px;">อุณหภูมิ ${temp.toFixed(1)}°C ความชื้น ${hum.toFixed(0)}% สามารถให้ปุ๋ยและพ่นสารบำรุงทางใบได้ตามปกติ</p></div>`;
+    : `<div style="background:var(--emerald-50);padding:14px;border-radius:10px;border:1.5px solid var(--emerald-200);"><strong style="color:var(--emerald-800)">🌦️ สภาพอากาศ: ปลอดโปร่ง เหมาะแก่การพ่นยา</strong><p style="font-size:0.86rem;color:var(--emerald-700);margin-top:6px;">อุณหภูมิ ${temp.toFixed(1)} องศา ความชื้น ${hum.toFixed(0)}% สามารถให้ปุ๋ยและพ่นสารบำรุงทางใบได้ตามปกติ</p></div>`;
 
   const advBoard = document.getElementById('expert-advisory-board');
   if (advBoard) advBoard.innerHTML = recWaterHtml + recSoilHtml + recWeatherHtml;
-}
-
-const drillDownData = {
-  'ปุ๋ย/ยา/สารเคมี': [
-    { date: '2026-07-24', subcat: 'สารเคมีและยาพ่น', desc: 'ท่อ PE (10 อัน) + ไทอะมีทอกแซม (1 ลัง) + อะบาเมกติน (2 ขวด)', plot: '1) สวนหมอนทอง (บ้าน)', amount: 5170 },
-    { date: '2026-07-20', subcat: 'ปุ๋ยเคมีทางดิน', desc: 'ปุ๋ยสูตร 15-15-15 จำนวน 25 กระสอบ', plot: '2) สวนกระดุม (บ้าน)', amount: 38500 }
-  ],
-  'ค่าแรงงานเกษตร': [
-    { date: '2026-07-15', subcat: 'ค่าแรงงาน', desc: 'ค่าแรงจ้างโยงลูกและแต่งดอกทุเรียน 5 คน', plot: '1) สวนหมอนทอง (บ้าน)', amount: 5150 }
-  ],
-  'กองกลาง/อื่นๆ': [
-    { date: '2026-07-24', subcat: 'เงินกองกลาง', desc: 'สำรองค่าน้ำมันและอุปกรณ์ส่วนกลางสวน', plot: '🏛️ บัญชีกองกลางสวน / กงสี', amount: 3500 }
-  ]
-};
-
-function drillDownCategory(categoryName, amountFormatted) {
-  const card = document.getElementById('drilldown-card');
-  const title = document.getElementById('drill-title');
-  const tbody = document.getElementById('drill-table-body');
-  if (!card || !title || !tbody) return;
-
-  title.innerText = `🔍 รายละเอียดรายการในหมวดหมู่: ${categoryName} (${amountFormatted})`;
-  tbody.innerHTML = '';
-
-  const items = drillDownData[categoryName] || [];
-  items.forEach(it => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td data-label="วันที่" style="font-weight:700">${formatDateSlashThai(it.date)}</td>
-      <td data-label="หมวดหมู่"><span class="badge-op">${it.subcat}</span></td>
-      <td data-label="รายละเอียด">${it.desc}</td>
-      <td data-label="แปลงสวน" style="font-weight:700">${it.plot}</td>
-      <td data-label="จำนวนเงิน" style="text-align:right;font-weight:800">${formatCurrency(it.amount)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  card.classList.remove('hidden');
-  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// ====== CSV EXPORT ======
-function exportAccCSV() {
-  const rows = [['วันที่ (วว/ดด/ปปปป)', 'ประเภท', 'แปลงสวน', 'หมวดหมู่', 'รายละเอียด', 'จำนวนเงิน (บาท)']];
-  [...accEntries].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(e => {
-    rows.push([
-      formatDateSlashThai(e.date),
-      e.type === 'income' ? 'รายรับ' : 'รายจ่าย',
-      extractEntryPlot(e),
-      e.category || '',
-      e.detail || '',
-      safeNum(e.amount).toFixed(2)
-    ]);
-  });
-  const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'สมุดบัญชีสวนทุเรียน_' + getTodayISO() + '.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('ดาวน์โหลดไฟล์รายงาน CSV เรียบร้อยแล้ว', 'success');
 }
 
 function showSensorTooltip(title, d15, d30) {
@@ -1671,7 +1533,7 @@ const APPS_SCRIPT_TEMPLATE = `function doPost(e) {
 
 async function syncSingleEntryToSheet({ accEntry = null, fieldLog = null, plantSurvey = null }) {
   try {
-    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/sync'), {
+    const r = await AGRI_STORAGE.authFetch('/api/sheets/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest', accEntry, fieldLog, plantSurvey }),
@@ -1768,7 +1630,7 @@ async function refreshSheetsStatus() {
   const directLink = document.getElementById('sheets-direct-link');
   const inputEl = document.getElementById('sheets-webhook-input');
   try {
-    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/config'), { signal: AbortSignal.timeout(5000) });
+    const r = await AGRI_STORAGE.authFetch('/api/sheets/config', { signal: AbortSignal.timeout(5000) });
     const cfg = await AGRI_STORAGE.parseResponseSafely(r);
     if (!cfg || !cfg.success) return;
 
@@ -1826,7 +1688,7 @@ async function saveSheetsWebhook() {
   else localStorage.removeItem('agridash_sheets_webhook_url');
 
   try {
-    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/config'), {
+    const r = await AGRI_STORAGE.authFetch('/api/sheets/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ webhookUrl: url }),
@@ -1844,7 +1706,7 @@ async function saveSheetsWebhook() {
 async function flushAllToGoogleSheet() {
   try {
     showToast('🔄 กำลังซิงค์ข้อมูลทั้งหมดขึ้น Google Sheet...', 'success');
-    const r = await fetch(AGRI_STORAGE.apiUrl('/api/sheets/flush'), {
+    const r = await AGRI_STORAGE.authFetch('/api/sheets/flush', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userEmail: currentLoggedInEmail || 'guest' }),
@@ -1887,6 +1749,15 @@ async function copyAppsScriptCode() {
   }
 }
 
+// ====== SESSION EXPIRY HANDLER ======
+window.addEventListener('agri-auth-expired', () => {
+  AGRI_STORAGE.setToken('');
+  if (!isGuestMode && currentLoggedInEmail !== 'guest') {
+    showToast('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่อีกครั้งเพื่อซิงค์ข้อมูลคลาวด์', 'warning');
+    openLoginModal();
+  }
+});
+
 // ====== INITIALIZATION ON LOAD ======
 document.addEventListener('DOMContentLoaded', async () => {
   setDefaultTodayDates();
@@ -1897,6 +1768,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   calculateSprayWater();
   calculateFlowerDates();
 
+  if (typeof AGRI_ORCHARDS !== 'undefined') {
+    AGRI_ORCHARDS.onChange(refreshPlotSelects);
+  }
+  refreshPlotSelects();
+
   const session = AGRI_STORAGE.getSession();
   if (session.email && !session.isGuest && session.email !== 'guest') {
     currentLoggedInEmail = session.email;
@@ -1905,7 +1781,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const recent = (AGRI_STORAGE.getRecentAccounts ? AGRI_STORAGE.getRecentAccounts() : []).find(a => a.email === session.email);
     updateAvatarUI(session.email, recent?.firstName, recent?.farmName);
   } else {
-    // เริ่มต้นในโหมดผู้เยี่ยมชม เพื่อให้ใช้งานภาคสนามได้ทันที และมีปุ่มเข้าสู่ระบบให้กดได้ตลอดเวลา
     currentLoggedInEmail = 'guest';
     isGuestMode = true;
     AGRI_STORAGE.saveSession('guest', true);
@@ -1914,14 +1789,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   hidePageLoader();
 
-  // เช็คการเชื่อมต่อ Cloud Backend และโหลดข้อมูลแบบ Non-blocking
   const healthPromise = AGRI_STORAGE.checkHealth().then(health => {
     updateConnectionUI(health);
-    refreshSheetsStatus();
     return health;
   });
 
-  await loadUserData();
+  await reloadUserWorkspace();
+  refreshSheetsStatus();
   await healthPromise;
 
   setInterval(async () => {
